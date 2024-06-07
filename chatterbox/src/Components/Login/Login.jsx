@@ -35,13 +35,35 @@ const Login = () => {
         .max(128, "Password too long"),
     }),
     onSubmit: (values, actions) => {
-      toast({
-        title: "Logged in successfully!",
-        description: "Welcome to Chatterboxx!",
-        status: "success",
-        duration: 5000,
-        isClosable: true,
-      });
+      const vals = { ...values };
+      fetch("http://localhost:4000/auth/login", {
+        method: "POST",
+        credentials: "include",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(vals),
+      })
+        .catch((err) => {
+          return;
+        })
+        .then((res) => {
+          if (!res || !res.ok || res.status >= 400) {
+            return;
+          }
+          toast({
+            title: "Log in successful!",
+            description: "Welcome to Chatterboxx!",
+            status: "success",
+            duration: 5000,
+            isClosable: true,
+          });
+          return res.json();
+        })
+        .then((data) => {
+          if (!data) return;
+          console.log(data);
+        });
       actions.resetForm();
     },
   });

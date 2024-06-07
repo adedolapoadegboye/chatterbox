@@ -40,14 +40,36 @@ const Signup = () => {
         .max(128, "Retyped Password too long"),
     }),
     onSubmit: (values, actions) => {
-      toast({
-        title: "Logged in successfully!",
-        description: "Welcome to Chatterboxx!",
-        status: "success",
-        duration: 5000,
-        isClosable: true,
-      });
+      const vals = { ...values };
       actions.resetForm();
+      fetch("http://localhost:4000/auth/signup", {
+        method: "POST",
+        credentials: "include",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(vals),
+      })
+        .catch((err) => {
+          return;
+        })
+        .then((res) => {
+          if (!res || !res.ok || res.status >= 400) {
+            return;
+          }
+          toast({
+            title: "Sign up successful!",
+            description: "Welcome to Chatterboxx!",
+            status: "success",
+            duration: 5000,
+            isClosable: true,
+          });
+          return res.json();
+        })
+        .then((data) => {
+          if (!data) return;
+          console.log(data);
+        });
     },
   });
 
