@@ -4,6 +4,8 @@ const { Server } = require("socket.io"); // Socket.io for WebSocket communicatio
 const helmet = require("helmet"); // Helmet for securing Express apps by setting various HTTP headers
 const cors = require("cors"); // CORS for request/traffic permissions
 const authRouter = require("./routers/authRouter"); // Import auth handler for logins and signups
+const session = require("express-session");
+require("dotenv").config();
 
 // Create an Express application
 const app = express();
@@ -35,6 +37,21 @@ app.use(express.json());
 
 // Use middleware to pass auth requests to appropriate handler
 app.use("/auth", authRouter);
+
+app.use(
+  session({
+    secret: process.env.COOKIE_SECRET,
+    credentials: true,
+    name: "sid",
+    resave: false,
+    saveUninitialized: false,
+    cookie: {
+      secure: process.env.ENVIRONMENT === "production",
+      httpOnly: true,
+      sameSite: process.env.ENVIRONMENT === "production" ? "none" : "lax",
+    },
+  })
+);
 
 // Define a route for the root URL
 app.get("/", (req, res) => {

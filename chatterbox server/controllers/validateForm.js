@@ -22,7 +22,7 @@ const validateForm = (req, res) => {
       // If validation is successful
       if (valid) {
         console.log("Form is good");
-        res.status(200).json({ message: "Form is good" }); // Send a success response
+        // res.status(200).json({ message: "Form is good" }); // Send a success response
       }
     })
     .catch((err) => {
