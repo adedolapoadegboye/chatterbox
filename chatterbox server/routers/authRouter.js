@@ -23,10 +23,11 @@ router.post("/signup", async (req, res) => {
   } else {
     const hashedPassword = await bcrypt.hash(req.body.password, 10);
     const newUserQuery = await await executeQuery(
-      "INSERT INTO users (username, passhash) values($1,$2) RETURNING username",
+      "INSERT INTO users (username, passhash) values($1,$2) RETURNING id, username",
       [req.body.username, hashedPassword]
     );
-    res.json({ loggedIn: true, username: newUserQuery });
+    req.session.user = { username: "world", id: newUserQuery.rows[0].id };
+    res.json({ loggedIn: true, username: newUserQuery[0].usename });
   }
 });
 

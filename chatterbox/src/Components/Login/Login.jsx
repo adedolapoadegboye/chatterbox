@@ -11,6 +11,8 @@ import {
   Heading,
   Text,
   useToast,
+  Image,
+  Box,
 } from "@chakra-ui/react";
 import { ChatIcon } from "@chakra-ui/icons";
 import { useFormik } from "formik";
@@ -82,17 +84,30 @@ const Login = () => {
       // borderRadius="lg"
       // boxShadow="lg"
     >
-      {/* Main heading with gradient text */}
+      <Box textAlign="center">
+        <Image
+          src="./chatterbox_logo.png"
+          alt="Chatterbox Logo"
+          mx="auto"
+          mb={4}
+          borderRadius="full"
+          boxSize={{ base: "100px", md: "150px" }}
+          bgGradient="linear(to-r, green.400, cyan.500, teal.600)"
+          bgClip="text"
+          fallbackSrc="https://via.placeholder.com/150"
+        />
+      </Box>
       <Heading
         fontSize={{ base: "32px", md: "40px" }}
-        bgGradient="linear(to-r, pink.400, purple.500, blue.600)"
+        bgGradient="linear(to-r, green.400, cyan.500, teal.600)"
         bgClip="text"
         textAlign="center"
       >
-        Welcome to Chatterbox
+        {" "}
+        Welcome to Chatterbox {/* Chat icon */}
+        <ChatIcon w={9} h={9} color="teal.500" />
       </Heading>
-      {/* Chat icon */}
-      <ChatIcon w={12} h={12} color="purple.500" />
+
       {/* Subheading */}
       <Heading
         fontSize={{ base: "18px", md: "20px" }}
@@ -155,7 +170,7 @@ const Login = () => {
       <Text fontSize="sm" color="gray.500">
         Forgot your passsword?{" "}
         <Text as="span" color="purple.500">
-          Reset your passsword!
+          Reset your passsword
         </Text>
       </Text>
     </VStack>
