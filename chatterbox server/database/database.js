@@ -9,6 +9,11 @@ const pool = new Pool({
   database: process.env.DB_DATABASE,
   password: process.env.DB_PASSWORD,
   port: process.env.DB_PORT,
+  statement_timeout: 1000, // number of milliseconds before a statement in query will time out, default is no timeout
+  query_timeout: 1000, // number of milliseconds before a query call will timeout, default is no timeout
+  lock_timeout: 1000, // number of milliseconds a query is allowed to be en lock state before it's cancelled due to lock timeout
+  connectionTimeoutMillis: 60000, // number of milliseconds to wait for connection, default is no timeout
+  idle_in_transaction_session_timeout: 30000, // number of milliseconds before terminating any session with an open idle transaction, default is no timeout
   max: 20, // increase pool size to 20
   idleTimeoutMillis: 30000, // close idle clients after 30 seconds
   connectionTimeoutMillis: 2000, // return an error after 2 seconds if connection could not be established
