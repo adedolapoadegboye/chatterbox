@@ -1,11 +1,15 @@
 const express = require("express");
 const router = express.Router();
 const validateForm = require("../controllers/validateForm");
-const executeQuery = require("../database/database");
+const { executeQuery } = require("../database/database"); // Correctly import executeQuery
 const bcrypt = require("bcrypt");
 
 // Define the route for login
 router.post("/login", async (req, res) => {
+  const { username, password } = req.body;
+
+  console.log(req.session);
+
   try {
     // Validate form inputs
     const validationError = validateForm(req);
@@ -15,33 +19,38 @@ router.post("/login", async (req, res) => {
 
     // Check if the user exists
     const existingUserCheck = await executeQuery(
-      "SELECT id, username, passhash FROM users WHERE username=$1",
-      [req.body.username]
+      "SELECT id, username, passhash FROM chatterbox_users WHERE username=$1",
+      [username]
     );
 
-    if (existingUserCheck.rowCount > 0) {
+    if (existingUserCheck.length > 0) {
       // Compare password hashes
       const isValidPass = await bcrypt.compare(
-        req.body.password,
-        existingUserCheck.rows[0].passhash
+        password,
+        existingUserCheck[0].passhash
       );
 
       if (isValidPass) {
         // Save user data in session
         req.session.user = {
-          username: req.body.username,
-          id: existingUserCheck.rows[0].id,
+          username: username,
+          id: existingUserCheck[0].id,
         };
-        return res.json({ loggedIn: true, status: "Log in successful!" });
+        return res.json({
+          loggedIn: true,
+          status: "Log in successful!",
+        });
       } else {
-        return res
-          .status(401)
-          .json({ loggedIn: false, status: "Wrong username or password!" });
+        return res.status(401).json({
+          loggedIn: false,
+          status: "Wrong username or password!",
+        });
       }
     } else {
-      return res
-        .status(401)
-        .json({ loggedIn: false, status: "Wrong username or password!" });
+      return res.status(401).json({
+        loggedIn: false,
+        status: "Wrong username or password!",
+      });
     }
   } catch (error) {
     console.error("Login error:", error);
@@ -51,45 +60,49 @@ router.post("/login", async (req, res) => {
   }
 });
 
-// Define the route for signup
+// Signup route
 router.post("/signup", async (req, res) => {
   try {
-    // Validate form inputs
-    const validationError = validateForm(req);
-    if (validationError) {
-      return res.status(400).json({ loggedIn: false, status: validationError });
-    }
+    const { username, password } = req.body;
 
     // Check if the user already exists
     const existingUserCheck = await executeQuery(
-      "SELECT username FROM users WHERE username=$1",
-      [req.body.username]
+      "SELECT username FROM chatterbox_users WHERE username = $1",
+      [username]
     );
 
-    if (existingUserCheck.rowCount > 0) {
+    if (existingUserCheck.length > 0) {
       return res
         .status(409)
         .json({ loggedIn: false, status: "Account already exists" });
     } else {
       // Hash the password
-      const hashedPassword = await bcrypt.hash(req.body.password, 10);
+      const hashedPassword = await bcrypt.hash(password, 10);
 
       // Insert new user into the database
       const newUserQuery = await executeQuery(
-        "INSERT INTO users (username, passhash) VALUES ($1, $2) RETURNING id, username",
-        [req.body.username, hashedPassword]
+        "INSERT INTO chatterbox_users (username, passhash) VALUES ($1, $2) RETURNING id, username",
+        [username, hashedPassword]
       );
 
-      // Save user data in session
-      req.session.user = {
-        username: req.body.username,
-        id: newUserQuery.rows[0].id,
-      };
-      return res.json({
-        loggedIn: true,
-        status: "Signup successful!",
-        username: newUserQuery.rows[0].username,
-      });
+      // Check if the insert query returned a result
+      if (newUserQuery && newUserQuery.length > 0) {
+        // // Save user data in session
+        req.session.user = {
+          username: username,
+          id: newUserQuery[0].id,
+        };
+
+        return res.json({
+          loggedIn: true,
+          status: "Signup successful!",
+          username: newUserQuery[0].username,
+        });
+      } else {
+        return res
+          .status(500)
+          .json({ loggedIn: false, status: "User creation failed." });
+      }
     }
   } catch (error) {
     console.error("Signup error:", error);

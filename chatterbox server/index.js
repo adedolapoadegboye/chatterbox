@@ -35,9 +35,7 @@ app.use(
 // Use middleware to parse JSON bodies in HTTP requests
 app.use(express.json());
 
-// Use middleware to pass auth requests to appropriate handler
-app.use("/auth", authRouter);
-
+// Use middleware for session persistence
 app.use(
   session({
     secret: process.env.COOKIE_SECRET,
@@ -53,10 +51,13 @@ app.use(
   })
 );
 
+// Use middleware to pass auth requests to appropriate handler
+app.use("/auth", authRouter);
+
 // Define a route for the root URL
-app.get("/", (req, res) => {
-  res.json("hi"); // Send a JSON response with the message "hi"
-});
+// app.get("/", (req, res) => {
+//   res.json("hi"); // Send a JSON response with the message "hi"
+// });
 
 // Handle WebSocket connections
 io.on("connect", (socket) => {

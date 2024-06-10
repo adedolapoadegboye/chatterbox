@@ -1,106 +1,166 @@
-// src/routes/authRoutes.test.js
-const request = require("supertest");
+// Import necessary modules and components
 const express = require("express");
-const session = require("express-session");
-const authRoutes = require("./authRoutes");
-const executeQuery = require("../database/database");
+const request = require("supertest");
 const bcrypt = require("bcrypt");
+const session = require("express-session");
+const authRouter = require("./authRouter");
+const { executeQuery } = require("../database/database");
+const validateForm = require("../controllers/validateForm");
 
-// Mock the executeQuery function
 jest.mock("../database/database");
+jest.mock("../controllers/validateForm");
+jest.mock("bcrypt");
 
 const app = express();
-
 app.use(express.json());
 app.use(
-  session({ secret: "testsecret", resave: false, saveUninitialized: true })
+  session({
+    secret: "testSecret",
+    resave: false,
+    saveUninitialized: false,
+    cookie: { secure: false },
+  })
 );
-app.use("/auth", authRoutes);
+app.use("/auth", authRouter);
 
-describe("Auth Routes", () => {
+describe("Auth Router", () => {
   beforeEach(() => {
     jest.clearAllMocks();
   });
 
   describe("POST /auth/login", () => {
-    it("should return 400 for validation error", async () => {
-      const response = await request(app)
-        .post("/auth/login")
-        .send({ username: "", password: "" });
-      expect(response.status).toBe(400);
-      expect(response.body.loggedIn).toBe(false);
-    });
+    test("should login successfully with valid credentials", async () => {
+      validateForm.mockReturnValue(null);
+      executeQuery.mockResolvedValue([
+        { id: 1, username: "testuser", passhash: "hashedpassword" },
+      ]);
+      bcrypt.compare.mockResolvedValue(true);
 
-    it("should return 401 for non-existent user", async () => {
-      executeQuery.mockResolvedValueOnce({ rowCount: 0 });
       const response = await request(app)
         .post("/auth/login")
-        .send({ username: "nonexistent", password: "password" });
-      expect(response.status).toBe(401);
-      expect(response.body.loggedIn).toBe(false);
-      expect(response.body.status).toBe("Wrong username or password!");
-    });
+        .send({ username: "testuser", password: "password" });
 
-    it("should return 401 for wrong password", async () => {
-      executeQuery.mockResolvedValueOnce({
-        rowCount: 1,
-        rows: [{ id: 1, username: "testuser", passhash: "hashedpassword" }],
-      });
-      bcrypt.compare = jest.fn().mockResolvedValueOnce(false);
-      const response = await request(app)
-        .post("/auth/login")
-        .send({ username: "testuser", password: "wrongpassword" });
-      expect(response.status).toBe(401);
-      expect(response.body.loggedIn).toBe(false);
-      expect(response.body.status).toBe("Wrong username or password!");
-    });
-
-    it("should return 200 and set session for valid credentials", async () => {
-      executeQuery.mockResolvedValueOnce({
-        rowCount: 1,
-        rows: [{ id: 1, username: "testuser", passhash: "hashedpassword" }],
-      });
-      bcrypt.compare = jest.fn().mockResolvedValueOnce(true);
-      const response = await request(app)
-        .post("/auth/login")
-        .send({ username: "testuser", password: "correctpassword" });
+      expect(validateForm).toHaveBeenCalledWith(expect.any(Object));
+      expect(executeQuery).toHaveBeenCalledWith(
+        "SELECT id, username, passhash FROM chatterbox_users WHERE username=$1",
+        ["testuser"]
+      );
+      expect(bcrypt.compare).toHaveBeenCalledWith("password", "hashedpassword");
       expect(response.status).toBe(200);
-      expect(response.body.loggedIn).toBe(true);
-      expect(response.body.status).toBe("Log in successful!");
+      expect(response.body).toEqual({
+        loggedIn: true,
+        status: "Log in successful!",
+      });
+    });
+
+    test("should return validation error", async () => {
+      validateForm.mockReturnValue("Validation error");
+
+      const response = await request(app)
+        .post("/auth/login")
+        .send({ username: "testuser", password: "password" });
+
+      expect(validateForm).toHaveBeenCalledWith(expect.any(Object));
+      expect(response.status).toBe(400);
+      expect(response.body).toEqual({
+        loggedIn: false,
+        status: "Validation error",
+      });
+    });
+
+    test("should return wrong username or password error", async () => {
+      validateForm.mockReturnValue(null);
+      executeQuery.mockResolvedValue([]);
+
+      const response = await request(app)
+        .post("/auth/login")
+        .send({ username: "wronguser", password: "password" });
+
+      expect(executeQuery).toHaveBeenCalledWith(
+        "SELECT id, username, passhash FROM chatterbox_users WHERE username=$1",
+        ["wronguser"]
+      );
+      expect(response.status).toBe(401);
+      expect(response.body).toEqual({
+        loggedIn: false,
+        status: "Wrong username or password!",
+      });
+    });
+
+    test("should return internal server error on exception", async () => {
+      validateForm.mockReturnValue(null);
+      executeQuery.mockRejectedValue(new Error("Database error"));
+
+      const response = await request(app)
+        .post("/auth/login")
+        .send({ username: "testuser", password: "password" });
+
+      expect(response.status).toBe(500);
+      expect(response.body).toEqual({
+        loggedIn: false,
+        status: "An error occurred during login.",
+      });
     });
   });
 
   describe("POST /auth/signup", () => {
-    it("should return 400 for validation error", async () => {
+    test("should signup successfully with valid data", async () => {
+      executeQuery
+        .mockResolvedValueOnce([]) // For checking if user exists
+        .mockResolvedValueOnce([{ id: 1, username: "newuser" }]); // For inserting new user
+      bcrypt.hash.mockResolvedValue("hashedpassword");
+
       const response = await request(app)
         .post("/auth/signup")
-        .send({ username: "", password: "" });
-      expect(response.status).toBe(400);
-      expect(response.body.loggedIn).toBe(false);
+        .send({ username: "newuser", password: "newpassword" });
+
+      expect(executeQuery).toHaveBeenCalledWith(
+        "SELECT username FROM chatterbox_users WHERE username = $1",
+        ["newuser"]
+      );
+      expect(bcrypt.hash).toHaveBeenCalledWith("newpassword", 10);
+      expect(executeQuery).toHaveBeenCalledWith(
+        "INSERT INTO chatterbox_users (username, passhash) VALUES ($1, $2) RETURNING id, username",
+        ["newuser", "hashedpassword"]
+      );
+      expect(response.status).toBe(200);
+      expect(response.body).toEqual({
+        loggedIn: true,
+        status: "Signup successful!",
+        username: "newuser",
+      });
     });
 
-    it("should return 409 for existing user", async () => {
-      executeQuery.mockResolvedValueOnce({ rowCount: 1 });
+    test("should return account already exists error", async () => {
+      executeQuery.mockResolvedValue([{ username: "existinguser" }]);
+
       const response = await request(app)
         .post("/auth/signup")
         .send({ username: "existinguser", password: "password" });
+
+      expect(executeQuery).toHaveBeenCalledWith(
+        "SELECT username FROM chatterbox_users WHERE username = $1",
+        ["existinguser"]
+      );
       expect(response.status).toBe(409);
-      expect(response.body.loggedIn).toBe(false);
-      expect(response.body.status).toBe("Account already exists");
+      expect(response.body).toEqual({
+        loggedIn: false,
+        status: "Account already exists",
+      });
     });
 
-    it("should return 200 and set session for new user", async () => {
-      executeQuery.mockResolvedValueOnce({ rowCount: 0 });
-      executeQuery.mockResolvedValueOnce({
-        rows: [{ id: 1, username: "newuser" }],
-      });
-      bcrypt.hash = jest.fn().mockResolvedValueOnce("hashedpassword");
+    test("should return internal server error on exception", async () => {
+      executeQuery.mockRejectedValue(new Error("Database error"));
+
       const response = await request(app)
         .post("/auth/signup")
-        .send({ username: "newuser", password: "password" });
-      expect(response.status).toBe(200);
-      expect(response.body.loggedIn).toBe(true);
-      expect(response.body.status).toBe("Signup successful!");
+        .send({ username: "newuser", password: "newpassword" });
+
+      expect(response.status).toBe(500);
+      expect(response.body).toEqual({
+        loggedIn: false,
+        status: "An error occurred during signup.",
+      });
     });
   });
 });

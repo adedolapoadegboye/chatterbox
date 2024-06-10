@@ -8,7 +8,7 @@ const Views = () => {
   return (
     <Routes>
       <Route path="/" element={<Login />} />
-      <Route path="/register" element={<Signup />} />
+      <Route path="/signup" element={<Signup />} />
       <Route path="/login" element={<Login />} />
       <Route path="*" element={<Error404 />} />
     </Routes>

@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   VStack,
@@ -8,22 +8,30 @@ import {
   FormErrorMessage,
   FormLabel,
   Input,
+  InputGroup,
+  InputRightElement,
   Heading,
   Text,
   useToast,
-  Image,
+  IconButton,
   Box,
+  Image,
 } from "@chakra-ui/react";
-import { ChatIcon } from "@chakra-ui/icons";
+import {
+  ArrowBackIcon,
+  ChatIcon,
+  ViewIcon,
+  ViewOffIcon,
+} from "@chakra-ui/icons";
 import { useFormik } from "formik";
 import * as Yup from "yup";
 
 const Login = () => {
-  // Initialize toast for notifications
   const toast = useToast();
   const navigate = useNavigate();
 
-  // Set up formik for form handling and validation
+  const [showPassword, setShowPassword] = useState(false);
+
   const formik = useFormik({
     initialValues: { username: "", password: "" },
     validationSchema: Yup.object({
@@ -40,7 +48,7 @@ const Login = () => {
       const vals = { ...values };
       fetch("http://localhost:4000/auth/login", {
         method: "POST",
-        credentials: "include",
+        credentials: "include", // Important to include cookies
         headers: {
           "Content-Type": "application/json",
         },
@@ -80,9 +88,6 @@ const Login = () => {
       spacing="2rem"
       onSubmit={formik.handleSubmit}
       p="2rem"
-      // bg="white"
-      // borderRadius="lg"
-      // boxShadow="lg"
     >
       <Box textAlign="center">
         <Image
@@ -104,11 +109,9 @@ const Login = () => {
         textAlign="center"
       >
         {" "}
-        Welcome to Chatterbox {/* Chat icon */}
+        Welcome to Chatterbox
         <ChatIcon w={9} h={9} color="teal.500" />
       </Heading>
-
-      {/* Subheading */}
       <Heading
         fontSize={{ base: "18px", md: "20px" }}
         color="gray.500"
@@ -116,7 +119,6 @@ const Login = () => {
       >
         Already a member? Please log in below
       </Heading>
-      {/* Username input field */}
       <FormControl
         isInvalid={formik.errors.username && formik.touched.username}
       >
@@ -129,48 +131,60 @@ const Login = () => {
           onChange={formik.handleChange}
           onBlur={formik.handleBlur}
           value={formik.values.username}
-          bg="gray.700"
-          _focus={{ bg: "gray.700", borderColor: "purple.500" }}
+          bg="gray.200"
+          textColor="black"
+          _focus={{ bg: "gray.300", borderColor: "purple.500" }}
+          _placeholder={{ color: "gray.500" }} // Change placeholder text color here
         />
         <FormErrorMessage>{formik.errors.username}</FormErrorMessage>
       </FormControl>
-      {/* Password input field */}
       <FormControl
         isInvalid={formik.errors.password && formik.touched.password}
       >
         <FormLabel>Password</FormLabel>
-        <Input
-          name="password"
-          type="password"
-          placeholder="Enter Password"
-          autoComplete="off"
-          fontSize="lg"
-          onChange={formik.handleChange}
-          onBlur={formik.handleBlur}
-          value={formik.values.password}
-          bg="gray.700"
-          _focus={{ bg: "gray.700", borderColor: "purple.500" }}
-        />
+        <InputGroup>
+          <Input
+            name="password"
+            type={showPassword ? "text" : "password"}
+            placeholder="Enter Password"
+            autoComplete="off"
+            fontSize="lg"
+            onChange={formik.handleChange}
+            onBlur={formik.handleBlur}
+            value={formik.values.password}
+            bg="gray.200"
+            textColor="black"
+            _focus={{ bg: "gray.300", borderColor: "purple.500" }}
+            _placeholder={{ color: "gray.500" }} // Change placeholder text color here
+          />
+          <InputRightElement>
+            <IconButton
+              aria-label={showPassword ? "Hide password" : "Show password"}
+              icon={showPassword ? <ViewOffIcon /> : <ViewIcon />}
+              onClick={() => setShowPassword(!showPassword)}
+              variant="ghost"
+            />
+          </InputRightElement>
+        </InputGroup>
         <FormErrorMessage>{formik.errors.password}</FormErrorMessage>
       </FormControl>
-      {/* Button group for login and create account */}
       <ButtonGroup pt="1rem">
         <Button colorScheme="purple" type="submit">
           Log In
         </Button>
         <Button
+          onClick={() => navigate("/signup")}
           colorScheme="teal"
           variant="outline"
-          onClick={() => navigate("/register")}
+          leftIcon={<ArrowBackIcon />}
         >
           Create Account
         </Button>
       </ButtonGroup>
-      {/* Additional text for new users */}
       <Text fontSize="sm" color="gray.500">
-        Forgot your passsword?{" "}
+        Forgot your password?{" "}
         <Text as="span" color="purple.500">
-          Reset your passsword
+          Reset your password!
         </Text>
       </Text>
     </VStack>
