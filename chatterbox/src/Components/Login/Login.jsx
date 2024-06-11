@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useContext, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   VStack,
@@ -16,20 +16,22 @@ import {
   IconButton,
   Box,
   Image,
+  Spinner,
 } from "@chakra-ui/react";
 import {
-  ArrowBackIcon,
+  ArrowForwardIcon,
   ChatIcon,
   ViewIcon,
   ViewOffIcon,
 } from "@chakra-ui/icons";
 import { useFormik } from "formik";
 import * as Yup from "yup";
+import { accountContext } from "../Context/Context";
 
 const Login = () => {
   const toast = useToast();
   const navigate = useNavigate();
-
+  const { setUser, user } = useContext(accountContext);
   const [showPassword, setShowPassword] = useState(false);
 
   const formik = useFormik({
@@ -55,10 +57,12 @@ const Login = () => {
         body: JSON.stringify(vals),
       })
         .catch((err) => {
+          actions.setSubmitting(false); // Stop the loading animation on error
           return;
         })
         .then((res) => {
           if (!res || !res.ok || res.status >= 400) {
+            actions.setSubmitting(false); // Stop the loading animation on error
             return;
           }
           toast({
@@ -71,8 +75,15 @@ const Login = () => {
           return res.json();
         })
         .then((data) => {
-          if (!data) return;
+          if (!data) {
+            actions.setSubmitting(false); // Stop the loading animation if no data
+            return;
+          }
           console.log(data);
+          setUser({ ...data });
+          console.log(user);
+          actions.setSubmitting(false); // Stop the loading animation
+          navigate("/home");
         });
       actions.resetForm();
     },
@@ -109,8 +120,7 @@ const Login = () => {
         textAlign="center"
       >
         {" "}
-        Welcome to Chatterbox
-        <ChatIcon w={9} h={9} color="teal.500" />
+        Welcome to Chatterbox <ChatIcon w={9} h={9} color="teal.500" />
       </Heading>
       <Heading
         fontSize={{ base: "18px", md: "20px" }}
@@ -134,7 +144,7 @@ const Login = () => {
           bg="gray.200"
           textColor="black"
           _focus={{ bg: "gray.300", borderColor: "purple.500" }}
-          _placeholder={{ color: "gray.500" }} // Change placeholder text color here
+          _placeholder={{ color: "gray.500" }}
         />
         <FormErrorMessage>{formik.errors.username}</FormErrorMessage>
       </FormControl>
@@ -155,7 +165,7 @@ const Login = () => {
             bg="gray.200"
             textColor="black"
             _focus={{ bg: "gray.300", borderColor: "purple.500" }}
-            _placeholder={{ color: "gray.500" }} // Change placeholder text color here
+            _placeholder={{ color: "gray.500" }}
           />
           <InputRightElement>
             <IconButton
@@ -169,14 +179,18 @@ const Login = () => {
         <FormErrorMessage>{formik.errors.password}</FormErrorMessage>
       </FormControl>
       <ButtonGroup pt="1rem">
-        <Button colorScheme="purple" type="submit">
+        <Button
+          colorScheme="purple"
+          type="submit"
+          isLoading={formik.isSubmitting}
+        >
           Log In
         </Button>
         <Button
           onClick={() => navigate("/signup")}
           colorScheme="teal"
           variant="outline"
-          leftIcon={<ArrowBackIcon />}
+          leftIcon={<ArrowForwardIcon />}
         >
           Create Account
         </Button>
@@ -187,6 +201,15 @@ const Login = () => {
           Reset your password!
         </Text>
       </Text>
+      {formik.isSubmitting && (
+        <Spinner
+          thickness="4px"
+          speed="0.65s"
+          emptyColor="gray.200"
+          color="purple.500"
+          size="xl"
+        />
+      )}
     </VStack>
   );
 };

@@ -8,7 +8,7 @@ const bcrypt = require("bcrypt");
 router.post("/login", async (req, res) => {
   const { username, password } = req.body;
 
-  console.log(req.session);
+  // console.log(req.session);
 
   try {
     // Validate form inputs

@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useContext, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   VStack,
@@ -16,6 +16,7 @@ import {
   IconButton,
   Box,
   Image,
+  Spinner,
 } from "@chakra-ui/react";
 import {
   ArrowBackIcon,
@@ -25,17 +26,15 @@ import {
 } from "@chakra-ui/icons";
 import { useFormik } from "formik";
 import * as Yup from "yup";
+import { accountContext } from "../Context/Context";
 
 const Signup = () => {
-  // Initialize toast for notifications
   const toast = useToast();
   const navigate = useNavigate();
-
-  // State to manage password visibility
+  const { setUser } = useContext(accountContext);
   const [showPassword, setShowPassword] = useState(false);
   const [showRetypedPassword, setShowRetypedPassword] = useState(false);
 
-  // Set up formik for form handling and validation
   const formik = useFormik({
     initialValues: { username: "", password: "", retypedPassword: "" },
     validationSchema: Yup.object({
@@ -55,7 +54,6 @@ const Signup = () => {
     }),
     onSubmit: (values, actions) => {
       const vals = { ...values };
-      actions.resetForm();
       fetch("http://localhost:4000/auth/signup", {
         method: "POST",
         credentials: "include",
@@ -65,10 +63,12 @@ const Signup = () => {
         body: JSON.stringify(vals),
       })
         .catch((err) => {
+          actions.setSubmitting(false); // Stop the loading animation on error
           return;
         })
         .then((res) => {
           if (!res || !res.ok || res.status >= 400) {
+            actions.setSubmitting(false); // Stop the loading animation on error
             return;
           }
           toast({
@@ -81,9 +81,16 @@ const Signup = () => {
           return res.json();
         })
         .then((data) => {
-          if (!data) return;
+          if (!data) {
+            actions.setSubmitting(false); // Stop the loading animation if no data
+            return;
+          }
           console.log(data);
+          setUser({ ...data });
+          actions.setSubmitting(false); // Stop the loading animation
+          navigate("/home");
         });
+      actions.resetForm();
     },
   });
 
@@ -119,10 +126,8 @@ const Signup = () => {
         textAlign="center"
       >
         {" "}
-        Welcome to Chatterbox {/* Chat icon */}
-        <ChatIcon w={9} h={9} color="teal.500" />
+        Welcome to Chatterbox <ChatIcon w={9} h={9} color="teal.500" />
       </Heading>
-
       {/* Subheading */}
       <Heading
         fontSize={{ base: "18px", md: "20px" }}
@@ -219,7 +224,11 @@ const Signup = () => {
       </FormControl>
       {/* Button group for login and create account */}
       <ButtonGroup pt="1rem">
-        <Button colorScheme="purple" type="submit">
+        <Button
+          colorScheme="purple"
+          type="submit"
+          isLoading={formik.isSubmitting}
+        >
           Sign Up
         </Button>
         <Button
@@ -238,6 +247,15 @@ const Signup = () => {
           Reset your password!
         </Text>
       </Text>
+      {formik.isSubmitting && (
+        <Spinner
+          thickness="4px"
+          speed="0.65s"
+          emptyColor="gray.200"
+          color="purple.500"
+          size="xl"
+        />
+      )}
     </VStack>
   );
 };
