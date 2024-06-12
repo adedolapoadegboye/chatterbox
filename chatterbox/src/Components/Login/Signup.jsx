@@ -40,65 +40,57 @@ const Signup = () => {
     initialValues: { username: "", password: "", retypedPassword: "" },
     validationSchema: Yup.object({
       username: Yup.string()
-        .required("Username is required!")
-        .min(6, "Username is too short")
-        .max(128, "Username is too long"),
+        .required("Username required!")
+        .min(6, "Username too short")
+        .max(128, "Username too long"),
       password: Yup.string()
-        .required("Password is required!")
-        .min(6, "Password is too short")
-        .max(128, "Password is too long"),
+        .required("Password required!")
+        .min(6, "Password too short")
+        .max(128, "Password too long"),
       retypedPassword: Yup.string()
-        .required("Password retype is required!")
-        .oneOf([Yup.ref("password"), null], "Passwords must match")
-        .min(6, "Retyped Password is too short")
-        .max(128, "Retyped Password is too long"),
+        .required("Retyped password required!")
+        .oneOf([Yup.ref("password")], "Passwords must match"),
     }),
-    onSubmit: (values, actions) => {
-      const vals = { ...values };
-      fetch("http://localhost:4000/auth/signup", {
-        method: "POST",
-        credentials: "include",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(vals),
-      })
-        .catch((err) => {
+    onSubmit: async (values, actions) => {
+      setError(null); // Clear previous errors
+      try {
+        const response = await fetch("http://localhost:4000/auth/signup", {
+          method: "POST",
+          credentials: "include", // Important to include cookies
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            username: values.username,
+            password: values.password,
+          }),
+        });
+        const data = await response.json();
+        if (!response.ok) {
+          setError(data.status || "Invalid credentials, please try again!");
           actions.setSubmitting(false); // Stop the loading animation on error
           return;
-        })
-        .then((res) => {
-          if (!res || !res.ok || res.status >= 400) {
-            console.log(res);
-            // setError(res);
-            actions.setSubmitting(false); // Stop the loading animation on error
-            return;
-          }
-          toast({
-            title: "Sign up successful!",
-            description: "Welcome to Chatterboxx!",
-            status: "success",
-            duration: 5000,
-            isClosable: true,
-          });
-          return res.json();
-        })
-        .then((data) => {
-          console.log(data);
-          if (!data) {
-            actions.setSubmitting(false); // Stop the loading animation if no data
-            return;
-          } else if (data.status) {
-            setUser({ ...data });
-
-            setError(data.status);
-          } else if (data.loggedIn) {
-            setUser({ ...data });
-            actions.setSubmitting(false); // Stop the loading animation
-            navigate("/home");
-          }
+        }
+        if (!data.loggedIn) {
+          setError(data.status);
+          actions.setSubmitting(false); // Stop the loading animation if login failed
+          return;
+        }
+        toast({
+          title: "Sign up successful!",
+          description: "Welcome to Chatterboxx!",
+          status: "success",
+          duration: 5000,
+          isClosable: true,
         });
-      actions.resetForm();
+        setUser({ ...data });
+        navigate("/home");
+      } catch (err) {
+        setError("An error occurred. Please try again.");
+      } finally {
+        actions.setSubmitting(false); // Stop the loading animation
+        actions.resetForm();
+      }
     },
   });
 
@@ -126,7 +118,6 @@ const Signup = () => {
           fallbackSrc="https://via.placeholder.com/150"
         />
       </Box>
-      {/* Main heading with gradient text */}
       <Heading
         fontSize={{ base: "32px", md: "40px" }}
         bgGradient="linear(to-r, green.400, cyan.500, teal.600)"
@@ -136,7 +127,6 @@ const Signup = () => {
         {" "}
         Welcome to Chatterbox <ChatIcon w={9} h={9} color="teal.500" />
       </Heading>
-      {/* Subheading */}
       <Heading
         fontSize={{ base: "18px", md: "20px" }}
         color="gray.500"
@@ -144,10 +134,20 @@ const Signup = () => {
       >
         Don't have an account? Please sign up below
       </Heading>
-      <Text as="p" color="red.500">
-        {error}
-      </Text>
-      {/* Username input field */}
+      <>
+        {formik.isSubmitting && (
+          <Spinner
+            thickness="4px"
+            speed="0.65s"
+            emptyColor="gray.200"
+            color="purple.500"
+            size="xl"
+          />
+        )}
+        <Text as="p" color="red.500">
+          {error}
+        </Text>
+      </>
       <FormControl
         isInvalid={formik.errors.username && formik.touched.username}
       >
@@ -167,7 +167,6 @@ const Signup = () => {
         />
         <FormErrorMessage>{formik.errors.username}</FormErrorMessage>
       </FormControl>
-      {/* Password input field */}
       <FormControl
         isInvalid={formik.errors.password && formik.touched.password}
       >
@@ -198,7 +197,6 @@ const Signup = () => {
         </InputGroup>
         <FormErrorMessage>{formik.errors.password}</FormErrorMessage>
       </FormControl>
-      {/* Retype Password input field */}
       <FormControl
         isInvalid={
           formik.errors.retypedPassword && formik.touched.retypedPassword
@@ -233,7 +231,6 @@ const Signup = () => {
         </InputGroup>
         <FormErrorMessage>{formik.errors.retypedPassword}</FormErrorMessage>
       </FormControl>
-      {/* Button group for login and create account */}
       <ButtonGroup pt="1rem">
         <Button
           colorScheme="purple"
@@ -251,22 +248,12 @@ const Signup = () => {
           Back to Login
         </Button>
       </ButtonGroup>
-      {/* Additional text for new users */}
       <Text fontSize="sm" color="gray.500">
         Forgot your password?{" "}
         <Text as="span" color="purple.500">
           Reset your password!
         </Text>
       </Text>
-      {formik.isSubmitting && (
-        <Spinner
-          thickness="4px"
-          speed="0.65s"
-          emptyColor="gray.200"
-          color="purple.500"
-          size="xl"
-        />
-      )}
     </VStack>
   );
 };

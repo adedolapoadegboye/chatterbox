@@ -32,7 +32,7 @@ const Login = () => {
   const [error, setError] = useState(null);
   const toast = useToast();
   const navigate = useNavigate();
-  const { setUser, user } = useContext(accountContext);
+  const { setUser } = useContext(accountContext);
   const [showPassword, setShowPassword] = useState(false);
 
   const formik = useFormik({
@@ -47,50 +47,43 @@ const Login = () => {
         .min(6, "Password too short")
         .max(128, "Password too long"),
     }),
-    onSubmit: (values, actions) => {
-      const vals = { ...values };
-      fetch("http://localhost:4000/auth/login", {
-        method: "POST",
-        credentials: "include", // Important to include cookies
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(vals),
-      })
-        .catch((err) => {
+    onSubmit: async (values, actions) => {
+      setError(null); // Clear previous errors
+      try {
+        const response = await fetch("http://localhost:4000/auth/login", {
+          method: "POST",
+          credentials: "include", // Important to include cookies
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(values),
+        });
+        const data = await response.json();
+        if (!response.ok) {
+          setError(data.status || "Invalid credentials, please try again!");
           actions.setSubmitting(false); // Stop the loading animation on error
           return;
-        })
-        .then((res) => {
-          if (!res || !res.ok || res.status >= 400) {
-            actions.setSubmitting(false); // Stop the loading animation on error
-            console.log(res);
-            if (res.status === 401) {
-              setError("Invalid credentials, please try again!");
-            }
-            return;
-          }
-          toast({
-            title: "Log in successful!",
-            description: "Welcome to Chatterboxx!",
-            status: "success",
-            duration: 5000,
-            isClosable: true,
-          });
-          return res.json();
-        })
-        .then((data) => {
-          if (!data) {
-            actions.setSubmitting(false); // Stop the loading animation if no data
-            return;
-          }
-          console.log(data);
-          setUser({ ...data });
-          console.log(user);
-          actions.setSubmitting(false); // Stop the loading animation
-          navigate("/home");
+        }
+        if (!data.loggedIn) {
+          setError(data.status);
+          actions.setSubmitting(false); // Stop the loading animation if login failed
+          return;
+        }
+        toast({
+          title: "Log in successful!",
+          description: "Welcome to Chatterboxx!",
+          status: "success",
+          duration: 5000,
+          isClosable: true,
         });
-      actions.resetForm();
+        setUser({ ...data });
+        navigate("/home");
+      } catch (err) {
+        setError("An error occurred. Please try again.");
+      } finally {
+        actions.setSubmitting(false); // Stop the loading animation
+        actions.resetForm();
+      }
     },
   });
 
@@ -134,9 +127,21 @@ const Login = () => {
       >
         Already a member? Please log in below
       </Heading>
-      <Text as="p" color="red.500">
-        {error}
-      </Text>
+      <>
+        {formik.isSubmitting && (
+          <Spinner
+            thickness="4px"
+            speed="0.65s"
+            emptyColor="gray.200"
+            color="purple.500"
+            size="xl"
+          />
+        )}
+        <Text as="p" color="red.500">
+          {error}
+        </Text>
+      </>
+
       <FormControl
         isInvalid={formik.errors.username && formik.touched.username}
       >
@@ -209,15 +214,6 @@ const Login = () => {
           Reset your password!
         </Text>
       </Text>
-      {formik.isSubmitting && (
-        <Spinner
-          thickness="4px"
-          speed="0.65s"
-          emptyColor="gray.200"
-          color="purple.500"
-          size="xl"
-        />
-      )}
     </VStack>
   );
 };
