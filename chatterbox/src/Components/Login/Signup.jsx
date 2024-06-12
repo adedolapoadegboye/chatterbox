@@ -29,6 +29,7 @@ import * as Yup from "yup";
 import { accountContext } from "../Context/Context";
 
 const Signup = () => {
+  const [error, setError] = useState(null);
   const toast = useToast();
   const navigate = useNavigate();
   const { setUser } = useContext(accountContext);
@@ -68,6 +69,8 @@ const Signup = () => {
         })
         .then((res) => {
           if (!res || !res.ok || res.status >= 400) {
+            console.log(res);
+            // setError(res);
             actions.setSubmitting(false); // Stop the loading animation on error
             return;
           }
@@ -81,14 +84,19 @@ const Signup = () => {
           return res.json();
         })
         .then((data) => {
+          console.log(data);
           if (!data) {
             actions.setSubmitting(false); // Stop the loading animation if no data
             return;
+          } else if (data.status) {
+            setUser({ ...data });
+
+            setError(data.status);
+          } else if (data.loggedIn) {
+            setUser({ ...data });
+            actions.setSubmitting(false); // Stop the loading animation
+            navigate("/home");
           }
-          console.log(data);
-          setUser({ ...data });
-          actions.setSubmitting(false); // Stop the loading animation
-          navigate("/home");
         });
       actions.resetForm();
     },
@@ -136,6 +144,9 @@ const Signup = () => {
       >
         Don't have an account? Please sign up below
       </Heading>
+      <Text as="p" color="red.500">
+        {error}
+      </Text>
       {/* Username input field */}
       <FormControl
         isInvalid={formik.errors.username && formik.touched.username}

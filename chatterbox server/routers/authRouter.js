@@ -5,60 +5,71 @@ const { executeQuery } = require("../database/database"); // Correctly import ex
 const bcrypt = require("bcrypt");
 
 // Define the route for login
-router.post("/login", async (req, res) => {
-  const { username, password } = req.body;
+router
+  .route("/login")
+  .post(async (req, res) => {
+    const { username, password } = req.body;
 
-  // console.log(req.session);
+    // console.log(req.session);
 
-  try {
-    // Validate form inputs
-    const validationError = validateForm(req);
-    if (validationError) {
-      return res.status(400).json({ loggedIn: false, status: validationError });
-    }
+    try {
+      // Validate form inputs
+      const validationError = validateForm(req);
+      if (validationError) {
+        return res
+          .status(400)
+          .json({ loggedIn: false, status: validationError });
+      }
 
-    // Check if the user exists
-    const existingUserCheck = await executeQuery(
-      "SELECT id, username, passhash FROM chatterbox_users WHERE username=$1",
-      [username]
-    );
-
-    if (existingUserCheck.length > 0) {
-      // Compare password hashes
-      const isValidPass = await bcrypt.compare(
-        password,
-        existingUserCheck[0].passhash
+      // Check if the user exists
+      const existingUserCheck = await executeQuery(
+        "SELECT id, username, passhash FROM chatterbox_users WHERE username=$1",
+        [username]
       );
 
-      if (isValidPass) {
-        // Save user data in session
-        req.session.user = {
-          username: username,
-          id: existingUserCheck[0].id,
-        };
-        return res.json({
-          loggedIn: true,
-          status: "Log in successful!",
-        });
+      if (existingUserCheck.length > 0) {
+        // Compare password hashes
+        const isValidPass = await bcrypt.compare(
+          password,
+          existingUserCheck[0].passhash
+        );
+
+        if (isValidPass) {
+          // Save user data in session
+          req.session.user = {
+            username: username,
+            id: existingUserCheck[0].id,
+          };
+          return res.json({
+            loggedIn: true,
+            status: "Log in successful!",
+          });
+        } else {
+          return res.status(401).json({
+            loggedIn: false,
+            status: "Wrong username or password!",
+          });
+        }
       } else {
         return res.status(401).json({
           loggedIn: false,
           status: "Wrong username or password!",
         });
       }
-    } else {
-      return res.status(401).json({
-        loggedIn: false,
-        status: "Wrong username or password!",
-      });
+    } catch (error) {
+      console.error("Login error:", error);
+      return res
+        .status(500)
+        .json({ loggedIn: false, status: "An error occurred during login." });
     }
-  } catch (error) {
-    console.error("Login error:", error);
-    return res
-      .status(500)
-      .json({ loggedIn: false, status: "An error occurred during login." });
-  }
-});
+  })
+  .get(async (req, res) => {
+    if (req.session.user && req.session.user.username) {
+      res.json({ loggedIn: true, username: req.session.username });
+    } else {
+      res.json({ loggedIn: false });
+    }
+  });
 
 // Signup route
 router.post("/signup", async (req, res) => {
@@ -74,7 +85,7 @@ router.post("/signup", async (req, res) => {
     if (existingUserCheck.length > 0) {
       return res
         .status(409)
-        .json({ loggedIn: false, status: "Account already exists" });
+        .json({ loggedIn: false, status: "Username taken" });
     } else {
       // Hash the password
       const hashedPassword = await bcrypt.hash(password, 10);

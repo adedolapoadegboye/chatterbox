@@ -29,6 +29,7 @@ import * as Yup from "yup";
 import { accountContext } from "../Context/Context";
 
 const Login = () => {
+  const [error, setError] = useState(null);
   const toast = useToast();
   const navigate = useNavigate();
   const { setUser, user } = useContext(accountContext);
@@ -63,6 +64,10 @@ const Login = () => {
         .then((res) => {
           if (!res || !res.ok || res.status >= 400) {
             actions.setSubmitting(false); // Stop the loading animation on error
+            console.log(res);
+            if (res.status === 401) {
+              setError("Invalid credentials, please try again!");
+            }
             return;
           }
           toast({
@@ -129,6 +134,9 @@ const Login = () => {
       >
         Already a member? Please log in below
       </Heading>
+      <Text as="p" color="red.500">
+        {error}
+      </Text>
       <FormControl
         isInvalid={formik.errors.username && formik.touched.username}
       >

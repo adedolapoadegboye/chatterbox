@@ -21,7 +21,7 @@ const validateForm = (req, res) => {
     .then((valid) => {
       // If validation is successful
       if (valid) {
-        console.log("Form is good!");
+        // console.log("Form is good!");
         // res.status(200).json({ message: "Form is good" }); // Send a success response
       }
     })
