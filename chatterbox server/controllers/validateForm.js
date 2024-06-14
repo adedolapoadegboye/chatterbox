@@ -12,23 +12,26 @@ const formSchema = Yup.object({
     .max(128, "Password is too long!"), // Maximum length of 128 characters
 });
 
-const validateForm = (req, res) => {
+const validateForm = (req, res, next) => {
   const formData = req.body; // Extract form data from the request body
+
+  console.log("Validating form data:", formData);
 
   // Validate the form data against the schema
   formSchema
-    .validate(formData)
-    .then((valid) => {
-      // If validation is successful
-      if (valid) {
-        // console.log("Form is good!");
-        // res.status(200).json({ message: "Form is good" }); // Send a success response
-      }
+    .validate(formData, { abortEarly: false }) // Ensure all errors are collected
+    .then(() => {
+      console.log("Validation successful");
+      next();
     })
     .catch((err) => {
-      // If validation fails
-      console.log(err.errors);
-      res.status(422).json({ errors: err.errors }).send(); // Send an error response with status 422
+      console.log("Validation failed:", err);
+      const errors =
+        err.inner && err.inner.length > 0
+          ? err.inner.map((e) => e.message)
+          : [err.message]; // Fallback to top-level error message if no inner errors
+      console.log("Formatted errors:", errors);
+      res.status(422).json({ errors }); // Send an error response with status 422
     });
 };
 

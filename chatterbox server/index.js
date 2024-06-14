@@ -6,6 +6,8 @@ const cors = require("cors"); // CORS for request/traffic permissions
 const authRouter = require("./routers/authRouter"); // Import auth handler for logins and signups
 const session = require("express-session");
 require("dotenv").config();
+const Redis = require("ioredis");
+const RedisStore = require("connect-redis").default; // Instantiate the RedisStore class with the session object
 
 // Create an Express application
 const app = express();
@@ -17,14 +19,17 @@ const server = require("http").createServer(app);
 const io = new Server(server, {
   cors: {
     origin: "http://localhost:3000", // Allow requests from this origin
-    credentials: "true", // Allow cookies to be sent with the requests
+    credentials: true, // Allow cookies to be sent with the requests
   },
 });
+
+// Instantiate a new Redis client for in-memory session storages
+const redisClient = new Redis();
 
 // Use Helmet middleware to enhance the app's security
 app.use(helmet());
 
-// User CORS to accept requests/traffic from the frontend only
+// Use CORS to accept requests/traffic from the frontend only
 app.use(
   cors({
     origin: "http://localhost:3000",
@@ -41,6 +46,7 @@ app.use(
     secret: process.env.COOKIE_SECRET,
     credentials: true,
     name: "sid",
+    store: new RedisStore({ client: redisClient }),
     resave: false,
     saveUninitialized: false,
     cookie: {
@@ -54,11 +60,6 @@ app.use(
 
 // Use middleware to pass auth requests to appropriate handler
 app.use("/auth", authRouter);
-
-// Define a route for the root URL
-// app.get("/", (req, res) => {
-//   res.json("hi"); // Send a JSON response with the message "hi"
-// });
 
 // Handle WebSocket connections
 io.on("connect", (socket) => {
