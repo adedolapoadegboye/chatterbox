@@ -15,14 +15,11 @@ const formSchema = Yup.object({
 const validateForm = (req, res, next) => {
   const formData = req.body; // Extract form data from the request body
 
-  console.log("Validating form data:", formData);
-
   // Validate the form data against the schema
   formSchema
     .validate(formData, { abortEarly: false }) // Ensure all errors are collected
     .then(() => {
       console.log("Validation successful");
-      next();
     })
     .catch((err) => {
       console.log("Validation failed:", err);
@@ -32,6 +29,7 @@ const validateForm = (req, res, next) => {
           : [err.message]; // Fallback to top-level error message if no inner errors
       console.log("Formatted errors:", errors);
       res.status(422).json({ errors }); // Send an error response with status 422
+      next();
     });
 };
 
