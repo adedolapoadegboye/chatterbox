@@ -6,7 +6,8 @@ const cors = require("cors"); // CORS for request/traffic permissions
 const authRouter = require("./routers/authRouter"); // Import auth handler for logins and signups
 const session = require("express-session");
 require("dotenv").config();
-const Redis = require("ioredis");
+const redisClient = require("./redis/redis");
+// const Redis2 = require("ioredis");
 const RedisStore = require("connect-redis").default; // Instantiate the RedisStore class with the session object
 
 // Create an Express application
@@ -23,9 +24,6 @@ const io = new Server(server, {
   },
 });
 
-// Instantiate a new Redis client for in-memory session storages
-const redisClient = new Redis();
-
 // Use Helmet middleware to enhance the app's security
 app.use(helmet());
 
@@ -36,6 +34,10 @@ app.use(
     credentials: true,
   })
 );
+
+// Instantiate a new Redis client for in-memory session storages
+// const redisClient = new Redis2();
+// console.log(redisClient);
 
 // Use middleware to parse JSON bodies in HTTP requests
 app.use(express.json());

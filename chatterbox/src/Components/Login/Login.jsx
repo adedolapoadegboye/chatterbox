@@ -186,6 +186,7 @@ const Login = () => {
               icon={showPassword ? <ViewOffIcon /> : <ViewIcon />}
               onClick={() => setShowPassword(!showPassword)}
               variant="ghost"
+              color={"purple.500"}
             />
           </InputRightElement>
         </InputGroup>

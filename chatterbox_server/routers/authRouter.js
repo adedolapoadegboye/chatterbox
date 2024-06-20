@@ -3,14 +3,13 @@ const router = express.Router();
 const validateForm = require("../controllers/validateForm");
 const { executeQuery } = require("../database/database"); // Correctly import executeQuery
 const bcrypt = require("bcrypt");
+const { rateLimiter } = require("../controllers/rateLimiter");
 
 // Define the route for login
 router
   .route("/login")
-  .post(async (req, res) => {
+  .post(rateLimiter, async (req, res) => {
     const { username, password } = req.body;
-
-    // console.log(req.session);
 
     try {
       // Validate form inputs
@@ -65,7 +64,7 @@ router
   })
   .get(async (req, res) => {
     if (req.session.user && req.session.user.username) {
-      res.json({ loggedIn: true, username: req.session.username });
+      res.json({ loggedIn: true, username: req.session.user.username });
     } else {
       res.json({ loggedIn: false });
     }
@@ -98,7 +97,7 @@ router.post("/signup", async (req, res) => {
 
       // Check if the insert query returned a result
       if (newUserQuery && newUserQuery.length > 0) {
-        // // Save user data in session
+        // Save user data in session
         req.session.user = {
           username: username,
           id: newUserQuery[0].id,

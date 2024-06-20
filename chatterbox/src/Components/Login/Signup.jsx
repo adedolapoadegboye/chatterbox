@@ -192,6 +192,7 @@ const Signup = () => {
               icon={showPassword ? <ViewOffIcon /> : <ViewIcon />}
               onClick={() => setShowPassword(!showPassword)}
               variant="ghost"
+              color={"purple.500"}
             />
           </InputRightElement>
         </InputGroup>
@@ -226,6 +227,7 @@ const Signup = () => {
               icon={showRetypedPassword ? <ViewOffIcon /> : <ViewIcon />}
               onClick={() => setShowRetypedPassword(!showRetypedPassword)}
               variant="ghost"
+              color={"purple.500"}
             />
           </InputRightElement>
         </InputGroup>
