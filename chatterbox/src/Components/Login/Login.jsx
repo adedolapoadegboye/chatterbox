@@ -59,7 +59,12 @@ const Login = () => {
           body: JSON.stringify(values),
         });
         const data = await response.json();
-        if (!response.ok) {
+        // console.log(data, response);
+        if (response.status === 429) {
+          setError(data.status);
+          actions.setSubmitting(false);
+          return;
+        } else if (!response.ok) {
           setError(data.status || "Invalid credentials, please try again!");
           actions.setSubmitting(false); // Stop the loading animation on error
           return;

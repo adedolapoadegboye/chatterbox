@@ -71,7 +71,7 @@ router
   });
 
 // Signup route
-router.post("/signup", async (req, res) => {
+router.post("/signup", rateLimiter, async (req, res) => {
   try {
     const { username, password } = req.body;
 
