@@ -10,6 +10,7 @@ import {
 } from "@chakra-ui/react";
 import Sidebar from "./Sidebar";
 import Chat from "./Chat";
+import useSocketSetup from "../../Helpers/useSocketSetup";
 
 export const FriendContext = createContext();
 
@@ -19,7 +20,7 @@ const Home = () => {
     { username: "Fatimah", connected: true, id: "2" },
     { username: "Aminah", connected: false, id: "3" },
   ]);
-
+  useSocketSetup();
   const sidebarColSpan = useBreakpointValue({ base: 12, md: 4 });
   const chatColSpan = useBreakpointValue({ base: 12, md: 8 });
   const bgColor = useColorModeValue("gray.50", "gray.900");

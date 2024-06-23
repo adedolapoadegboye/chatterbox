@@ -4,12 +4,11 @@ const { Server } = require("socket.io"); // Socket.io for WebSocket communicatio
 const helmet = require("helmet"); // Helmet for securing Express apps by setting various HTTP headers
 const cors = require("cors"); // CORS for request/traffic permissions
 const authRouter = require("./routers/authRouter"); // Import auth handler for logins and signups
-const session = require("express-session");
-require("dotenv").config();
-const redisClient = require("./redis/redis");
-const { sessionMW, wrap } = require("./controllers/serverController");
-// const Redis2 = require("ioredis");
-const RedisStore = require("connect-redis").default; // Instantiate the RedisStore class with the session object
+const session = require("express-session"); // Session middleware for handling user sessions
+require("dotenv").config(); // Load environment variables from .env file
+const redisClient = require("./redis/redis"); // Redis client for session storage
+const { sessionMW, wrap } = require("./controllers/serverController"); // Session middleware and wrapper for Socket.io
+const RedisStore = require("connect-redis").default; // Redis store for session storage
 
 // Create an Express application
 const app = express();
@@ -20,7 +19,7 @@ const server = require("http").createServer(app);
 // Create a new Socket.io server and configure CORS settings
 const io = new Server(server, {
   cors: {
-    origin: "http://localhost:3000", // Allow requests from this origin
+    origin: process.env.FRONTEND_URL || "http://localhost:3000", // Allow requests from this origin
     credentials: true, // Allow cookies to be sent with the requests
   },
 });
@@ -31,49 +30,53 @@ app.use(helmet());
 // Use CORS to accept requests/traffic from the frontend only
 app.use(
   cors({
-    origin: "http://localhost:3000",
+    origin: process.env.FRONTEND_URL || "http://localhost:3000",
     credentials: true,
   })
 );
 
-// Instantiate a new Redis client for in-memory session storages
-// const redisClient = new Redis2();
-// console.log(redisClient);
-
 // Use middleware to parse JSON bodies in HTTP requests
 app.use(express.json());
 
+// Log incoming requests in development mode for debugging purposes
+if (process.env.NODE_ENV === "development") {
+  const morgan = require("morgan");
+  app.use(morgan("dev"));
+}
+
 // Use middleware for session persistence
-app.use(
-  sessionMW
-  // session({
-  //   secret: process.env.COOKIE_SECRET,
-  //   credentials: true,
-  //   name: "sid",
-  //   store: new RedisStore({ client: redisClient }),
-  //   resave: false,
-  //   saveUninitialized: false,
-  //   cookie: {
-  //     secure: process.env.ENVIRONMENT === "production",
-  //     httpOnly: true,
-  //     sameSite: process.env.ENVIRONMENT === "production" ? "none" : "lax",
-  //     expires: 1000 * 60 * 60 * 24 * 7,
-  //   },
-  // })
-);
+app.use(sessionMW);
 
 // Use middleware to pass auth requests to appropriate handler
 app.use("/auth", authRouter);
 
+// Socket.io middleware to use the same session management
 io.use(wrap(sessionMW));
 
 // Handle WebSocket connections
 io.on("connect", (socket) => {
-  // Code to handle socket connections goes here
-  console.log(socket.request.session.user.username);
+  // Log the username of the connected user
+  console.log(`User connected: ${socket.request.session.user.username}`);
+  socket.on("disconnect", () => {
+    // Handle user disconnection
+    console.log(`User disconnected: ${socket.request.session.user.username}`);
+  });
+
+  // Handle other events
+  socket.on("message", (data) => {
+    console.log(
+      `Message from ${socket.request.session.user.username}: ${data}`
+    );
+  });
+});
+
+// Error handling middleware for Express
+app.use((err, req, res, next) => {
+  console.error(err.stack);
+  res.status(500).send("Something broke!");
 });
 
 // Start the server and listen on port 4000
-server.listen(4000, () => {
-  console.log("Server Listening on port 4000"); // Log a message when the server starts
+server.listen(process.env.PORT || 4000, () => {
+  console.log(`Server listening on port ${process.env.PORT || 4000}`); // Log a message when the server starts
 });
