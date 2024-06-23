@@ -7,6 +7,7 @@ const authRouter = require("./routers/authRouter"); // Import auth handler for l
 const session = require("express-session");
 require("dotenv").config();
 const redisClient = require("./redis/redis");
+const { sessionMW, wrap } = require("./controllers/serverController");
 // const Redis2 = require("ioredis");
 const RedisStore = require("connect-redis").default; // Instantiate the RedisStore class with the session object
 
@@ -44,28 +45,32 @@ app.use(express.json());
 
 // Use middleware for session persistence
 app.use(
-  session({
-    secret: process.env.COOKIE_SECRET,
-    credentials: true,
-    name: "sid",
-    store: new RedisStore({ client: redisClient }),
-    resave: false,
-    saveUninitialized: false,
-    cookie: {
-      secure: process.env.ENVIRONMENT === "production",
-      httpOnly: true,
-      sameSite: process.env.ENVIRONMENT === "production" ? "none" : "lax",
-      expires: 1000 * 60 * 60 * 24 * 7,
-    },
-  })
+  sessionMW
+  // session({
+  //   secret: process.env.COOKIE_SECRET,
+  //   credentials: true,
+  //   name: "sid",
+  //   store: new RedisStore({ client: redisClient }),
+  //   resave: false,
+  //   saveUninitialized: false,
+  //   cookie: {
+  //     secure: process.env.ENVIRONMENT === "production",
+  //     httpOnly: true,
+  //     sameSite: process.env.ENVIRONMENT === "production" ? "none" : "lax",
+  //     expires: 1000 * 60 * 60 * 24 * 7,
+  //   },
+  // })
 );
 
 // Use middleware to pass auth requests to appropriate handler
 app.use("/auth", authRouter);
 
+io.use(wrap(sessionMW));
+
 // Handle WebSocket connections
 io.on("connect", (socket) => {
   // Code to handle socket connections goes here
+  console.log(socket.request.session.user.username);
 });
 
 // Start the server and listen on port 4000
