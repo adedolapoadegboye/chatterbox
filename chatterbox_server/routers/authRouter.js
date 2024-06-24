@@ -4,6 +4,7 @@ const validateForm = require("../controllers/validateForm");
 const { executeQuery } = require("../database/database"); // Correctly import executeQuery
 const bcrypt = require("bcrypt");
 const { rateLimiter } = require("../controllers/rateLimiter");
+const { v4: uuidv4 } = require("uuid");
 
 // Define the route for login
 router
@@ -22,7 +23,7 @@ router
 
       // Check if the user exists
       const existingUserCheck = await executeQuery(
-        "SELECT id, username, passhash FROM chatterbox_users WHERE username=$1",
+        "SELECT id, username, passhash, userid FROM chatterbox_users WHERE username=$1",
         [username]
       );
 
@@ -38,6 +39,7 @@ router
           req.session.user = {
             username: username,
             id: existingUserCheck[0].id,
+            userid: existingUserCheck[0].userid,
           };
           return res.json({
             loggedIn: true,
@@ -91,8 +93,8 @@ router.post("/signup", rateLimiter, async (req, res) => {
 
       // Insert new user into the database
       const newUserQuery = await executeQuery(
-        "INSERT INTO chatterbox_users (username, passhash) VALUES ($1, $2) RETURNING id, username",
-        [username, hashedPassword]
+        "INSERT INTO chatterbox_users (username, passhash, userid) VALUES ($1, $2, $3) RETURNING id, username",
+        [username, hashedPassword, uuidv4()]
       );
 
       // Check if the insert query returned a result
@@ -101,6 +103,7 @@ router.post("/signup", rateLimiter, async (req, res) => {
         req.session.user = {
           username: username,
           id: newUserQuery[0].id,
+          userid: newUserQuery[0].userid,
         };
 
         return res.json({

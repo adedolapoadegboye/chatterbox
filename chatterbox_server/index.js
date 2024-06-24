@@ -1,4 +1,4 @@
-// Import the necessary modules
+// index.js
 const express = require("express"); // Express framework for handling HTTP requests
 const { Server } = require("socket.io"); // Socket.io for WebSocket communication
 const helmet = require("helmet"); // Helmet for securing Express apps by setting various HTTP headers
@@ -8,6 +8,7 @@ const session = require("express-session"); // Session middleware for handling u
 require("dotenv").config(); // Load environment variables from .env file
 const redisClient = require("./redis/redis"); // Redis client for session storage
 const { sessionMW, wrap } = require("./controllers/serverController"); // Session middleware and wrapper for Socket.io
+const { authorizeUser } = require("./controllers/socketController");
 const RedisStore = require("connect-redis").default; // Redis store for session storage
 
 // Create an Express application
@@ -53,10 +54,16 @@ app.use("/auth", authRouter);
 // Socket.io middleware to use the same session management
 io.use(wrap(sessionMW));
 
+// Custom middleware to authorize user
+io.use(authorizeUser);
+
 // Handle WebSocket connections
 io.on("connect", (socket) => {
-  // Log the username of the connected user
-  console.log(`User connected: ${socket.request.session.user.username}`);
+  // Log the username and user id of the connected user
+  console.log(
+    `User connected: ${socket.request.session.user.username} `,
+    socket.user.userid
+  );
   socket.on("disconnect", () => {
     // Handle user disconnection
     console.log(`User disconnected: ${socket.request.session.user.username}`);
