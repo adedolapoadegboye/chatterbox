@@ -8,7 +8,7 @@ const session = require("express-session"); // Session middleware for handling u
 require("dotenv").config(); // Load environment variables from .env file
 const redisClient = require("./redis/redis"); // Redis client for session storage
 const { sessionMW, wrap } = require("./controllers/serverController"); // Session middleware and wrapper for Socket.io
-const { authorizeUser } = require("./controllers/socketController");
+const { authorizeUser, addFriend } = require("./controllers/socketController");
 const RedisStore = require("connect-redis").default; // Redis store for session storage
 
 // Create an Express application
@@ -60,21 +60,14 @@ io.use(authorizeUser);
 // Handle WebSocket connections
 io.on("connect", (socket) => {
   // Log the username and user id of the connected user
-  console.log(
-    `User connected: ${socket.request.session.user.username} `,
-    socket.user.userid
-  );
+  console.log(`User connected: ${socket.request.session.user.username} `);
   socket.on("disconnect", () => {
     // Handle user disconnection
     console.log(`User disconnected: ${socket.request.session.user.username}`);
   });
 
-  // Handle other events
-  socket.on("message", (data) => {
-    console.log(
-      `Message from ${socket.request.session.user.username}: ${data}`
-    );
-  });
+  // Handle "Add Friend" events
+  socket.on("add_friend", addFriend);
 });
 
 // Error handling middleware for Express

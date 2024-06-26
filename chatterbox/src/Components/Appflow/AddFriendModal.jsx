@@ -18,13 +18,13 @@ import {
 import { Form, Formik } from "formik";
 import React, { useState } from "react";
 import * as Yup from "yup";
+import socket from "../../Helpers/socket";
 
 const AddFriendModal = ({ isOpen, onClose }) => {
   const [error, setError] = useState(null);
-
-  const initialValues = { username: "" };
+  const initialValues = { newFriendName: "" };
   const validationSchema = Yup.object({
-    username: Yup.string()
+    newFriendName: Yup.string()
       .required("Username required!")
       .min(6, "Username too short")
       .max(128, "Username too long"),
@@ -33,19 +33,14 @@ const AddFriendModal = ({ isOpen, onClose }) => {
   const handleSubmit = async (values, actions) => {
     setError(null); // Clear previous errors
     try {
-      const response = await fetch("http://localhost:4000/auth/addfriend", {
-        method: "POST",
-        credentials: "include", // Important to include cookies
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(values),
+      socket.emit("add_friend", values.newFriendName, ({ done, addError }) => {
+        console.log(done, addError);
+        if (done) {
+          setError("Friend Request Sent!");
+        } else {
+          setError(addError);
+        }
       });
-      const data = await response.json();
-      console.log(data, response);
-      if (!response.ok) {
-        setError(data.status || "Invalid credentials, please try again!");
-      }
     } catch (err) {
       setError("An error occurred. Please try again.");
     } finally {
@@ -91,24 +86,28 @@ const AddFriendModal = ({ isOpen, onClose }) => {
                   {error}
                 </Text>
                 <FormControl
-                  isInvalid={formik.errors.username && formik.touched.username}
+                  isInvalid={
+                    formik.errors.newFriendName && formik.touched.newFriendName
+                  }
                   mt={4}
                 >
                   <FormLabel>Enter Friend's Username</FormLabel>
                   <Input
-                    name="username"
+                    name="newFriendName"
                     placeholder="Enter Friend's Username"
                     autoComplete="off"
                     fontSize="sm"
                     onChange={formik.handleChange}
                     onBlur={formik.handleBlur}
-                    value={formik.values.username}
+                    value={formik.values.newFriendName}
                     bg={inputBg}
                     textColor={textColor}
                     _focus={{ bg: inputFocusBg, borderColor: "purple.500" }}
                     _placeholder={{ color: "gray.500" }}
                   />
-                  <FormErrorMessage>{formik.errors.username}</FormErrorMessage>
+                  <FormErrorMessage>
+                    {formik.errors.newFriendName}
+                  </FormErrorMessage>
                 </FormControl>
               </ModalBody>
               <ModalFooter>
