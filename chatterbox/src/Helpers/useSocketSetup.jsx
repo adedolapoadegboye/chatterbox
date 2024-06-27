@@ -4,28 +4,43 @@ import { accountContext } from "../Components/Context/Context";
 
 const useSocketSetup = (setFriendsList) => {
   const { setUser } = useContext(accountContext);
+
   useEffect(() => {
+    // Connect to the socket server
     socket.connect();
-    socket.on("friends", (friendsList) => {
-      // console.log(friendsList);
+
+    // Handle friends list received from the server
+    const handleFriendsList = (friendsList) => {
       setFriendsList(friendsList);
-    });
-    socket.on("connected", (status, username) => {
+    };
+
+    // Handle connection status updates
+    const handleConnectionStatus = (status, username) => {
       setFriendsList((prevFriends) => {
-        const friends = [...prevFriends];
-        return friends.map((friend) => {
+        return prevFriends.map((friend) => {
           if (friend.username === username) {
-            friend.connected = status;
+            return { ...friend, connected: status };
           }
           return friend;
         });
       });
-    });
-    socket.on("connect_error", () => {
+    };
+
+    // Handle connection errors
+    const handleConnectError = () => {
       setUser({ loggedIn: false });
-    });
+    };
+
+    // Set up socket event listeners
+    socket.on("friends", handleFriendsList);
+    socket.on("connected", handleConnectionStatus);
+    socket.on("connect_error", handleConnectError);
+
+    // Cleanup function to remove event listeners
     return () => {
-      socket.off("connect_error");
+      socket.off("friends", handleFriendsList);
+      socket.off("connected", handleConnectionStatus);
+      socket.off("connect_error", handleConnectError);
     };
   }, [setUser, setFriendsList]);
 };

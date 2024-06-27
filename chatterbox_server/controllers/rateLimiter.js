@@ -14,13 +14,16 @@ module.exports.rateLimiter = async (req, res, next) => {
     if (requestCount > 10) {
       return res.status(429).json({
         loggedIn: false,
-        status: "Rate Limit Exceeded. Try again in a minute!",
+        status:
+          "Whoa there, speedy! You’ve hit the brakes too many times. Try again in a minute!",
       });
     }
 
     next();
   } catch (error) {
     // console.error("Rate limiter error:", error);
-    return res.status(500).json({ error: "Internal Server Error" });
+    return res.status(500).json({
+      error: "Yikes! Something went wrong on our end. Please try again later.",
+    });
   }
 };

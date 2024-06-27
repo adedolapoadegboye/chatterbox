@@ -21,16 +21,21 @@ import * as Yup from "yup";
 import socket from "../../Helpers/socket";
 import { FriendContext } from "./Home";
 
+// Validation schema using Yup
+const validationSchema = Yup.object({
+  newFriendName: Yup.string()
+    .required("Username required!")
+    .min(6, "Username too short")
+    .max(128, "Username too long"),
+});
+
 const AddFriendModal = ({ isOpen, onClose }) => {
   const [error, setError] = useState(null);
-  const initialValues = { newFriendName: "" };
   const { setFriendsList } = useContext(FriendContext);
-  const validationSchema = Yup.object({
-    newFriendName: Yup.string()
-      .required("Username required!")
-      .min(6, "Username too short")
-      .max(128, "Username too long"),
-  });
+
+  const initialValues = { newFriendName: "" };
+
+  // Submit handler
   const handleSubmit = async (values, actions) => {
     setError(null); // Clear previous errors
     try {
@@ -38,13 +43,11 @@ const AddFriendModal = ({ isOpen, onClose }) => {
         "add_friend",
         values.newFriendName,
         ({ done, addError, newFriend }) => {
-          console.log(done, addError);
           if (done) {
             setFriendsList((c) => [newFriend, ...c]);
-            setError("Friend Request Sent!");
-            onClose();
+            onClose(); // Close the modal on success
           } else {
-            setError(addError);
+            setError(addError); // Set error message
           }
         }
       );
@@ -56,6 +59,7 @@ const AddFriendModal = ({ isOpen, onClose }) => {
     }
   };
 
+  // Color mode values
   const bgColor = useColorModeValue("gray.100", "gray.900");
   const inputBg = useColorModeValue("gray.200", "gray.700");
   const inputFocusBg = useColorModeValue("gray.300", "gray.600");
@@ -89,7 +93,7 @@ const AddFriendModal = ({ isOpen, onClose }) => {
                     my="4"
                   />
                 )}
-                <Text as="p" color="red.500" textAlign="center">
+                <Text as="p" color="blue.200" textAlign="center">
                   {error}
                 </Text>
                 <FormControl

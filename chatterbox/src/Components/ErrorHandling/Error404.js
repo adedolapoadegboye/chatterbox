@@ -1,6 +1,7 @@
 // src/pages/Error404.js
-import { Box, Heading, Text, Button } from "@chakra-ui/react";
+import { Box, Heading, Text, Button, Icon } from "@chakra-ui/react";
 import { Link } from "react-router-dom";
+import { FiAlertCircle } from "react-icons/fi"; // Import an icon for better visual feedback
 
 // Error404 component to display a 404 error page
 function Error404() {
@@ -14,11 +15,13 @@ function Error404() {
       alignItems="center"
       justifyContent="center"
       minHeight="100vh"
-      // bg="gray.50"
-      color="gray.500"
+      bg="gray.50"
+      color="gray.700"
     >
+      {/* Icon to visually represent the error */}
+      <Icon as={FiAlertCircle} w={20} h={20} color="red.500" mb={4} />
       {/* Heading with modern styling to display 404 error */}
-      <Heading as="h1" size="2xl" mb={4} color="gray.500">
+      <Heading as="h1" size="2xl" mb={4}>
         404
       </Heading>
       {/* Subtext to inform user the page was not found */}

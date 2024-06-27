@@ -1,47 +1,43 @@
-import React, { useState, useEffect } from "react";
+import React, { createContext, useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 
-const { createContext } = require("react");
-
+// Create a context for user account
 export const accountContext = createContext();
 
 const UserContext = ({ children }) => {
   const [user, setUser] = useState({ loggedIn: null });
   const navigate = useNavigate();
+
   useEffect(() => {
-    fetch("http://localhost:4000/auth/login", {
-      method: "GET",
-      credentials: "include", // Important to include cookies
-      headers: {
-        "Content-Type": "application/json",
-      },
-    })
-      .catch((err) => {
-        setUser({ loggedIn: false });
-        // console.log("Not logged in");
-        return;
-      })
-      .then((res) => {
+    const checkLoginStatus = async () => {
+      try {
+        const res = await fetch("http://localhost:4000/auth/login", {
+          method: "GET",
+          credentials: "include", // Important to include cookies
+          headers: {
+            "Content-Type": "application/json",
+          },
+        });
+
         if (!res || !res.ok || res.status >= 400) {
           setUser({ loggedIn: false });
-          // console.log("Not logged in");
-
           return;
         }
 
-        return res.json();
-      })
-      .then((data) => {
+        const data = await res.json();
         if (!data) {
           setUser({ loggedIn: false });
-          // console.log("Not logged in");
-
           return;
         }
-        // console.log(data);
+
         setUser({ ...data });
         navigate("/home");
-      });
+      } catch (err) {
+        setUser({ loggedIn: false });
+      }
+    };
+
+    checkLoginStatus();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 

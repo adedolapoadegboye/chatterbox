@@ -28,6 +28,21 @@ import { useFormik } from "formik";
 import * as Yup from "yup";
 import { accountContext } from "../Context/Context";
 
+// Validation schema using Yup
+const validationSchema = Yup.object({
+  username: Yup.string()
+    .required("Username required!")
+    .min(6, "Username too short")
+    .max(128, "Username too long"),
+  password: Yup.string()
+    .required("Password required!")
+    .min(6, "Password too short")
+    .max(128, "Password too long"),
+  retypedPassword: Yup.string()
+    .required("Retyped password required!")
+    .oneOf([Yup.ref("password")], "Passwords must match"),
+});
+
 const Signup = () => {
   const [error, setError] = useState(null);
   const toast = useToast();
@@ -36,21 +51,10 @@ const Signup = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [showRetypedPassword, setShowRetypedPassword] = useState(false);
 
+  // Formik for form handling
   const formik = useFormik({
     initialValues: { username: "", password: "", retypedPassword: "" },
-    validationSchema: Yup.object({
-      username: Yup.string()
-        .required("Username required!")
-        .min(6, "Username too short")
-        .max(128, "Username too long"),
-      password: Yup.string()
-        .required("Password required!")
-        .min(6, "Password too short")
-        .max(128, "Password too long"),
-      retypedPassword: Yup.string()
-        .required("Retyped password required!")
-        .oneOf([Yup.ref("password")], "Passwords must match"),
-    }),
+    validationSchema,
     onSubmit: async (values, actions) => {
       setError(null); // Clear previous errors
       try {
@@ -65,26 +69,24 @@ const Signup = () => {
             password: values.password,
           }),
         });
+
         const data = await response.json();
+
         if (!response.ok) {
           setError(data.status || "Invalid credentials, please try again!");
-          actions.setSubmitting(false); // Stop the loading animation on error
-          return;
-        }
-        if (!data.loggedIn) {
+        } else if (!data.loggedIn) {
           setError(data.status);
-          actions.setSubmitting(false); // Stop the loading animation if login failed
-          return;
+        } else {
+          toast({
+            title: "Sign up successful!",
+            description: "Welcome to Chatterboxx!",
+            status: "success",
+            duration: 5000,
+            isClosable: true,
+          });
+          setUser({ ...data });
+          navigate("/home");
         }
-        toast({
-          title: "Sign up successful!",
-          description: "Welcome to Chatterboxx!",
-          status: "success",
-          duration: 5000,
-          isClosable: true,
-        });
-        setUser({ ...data });
-        navigate("/home");
       } catch (err) {
         setError("An error occurred. Please try again.");
       } finally {
@@ -113,8 +115,6 @@ const Signup = () => {
           mb={4}
           borderRadius="full"
           boxSize={{ base: "100px", md: "150px" }}
-          bgGradient="linear(to-r, green.400, cyan.500, teal.600)"
-          bgClip="text"
           fallbackSrc="https://via.placeholder.com/150"
         />
       </Box>
@@ -124,30 +124,29 @@ const Signup = () => {
         bgClip="text"
         textAlign="center"
       >
-        {" "}
         Welcome to Chatterbox <ChatIcon w={9} h={9} color="teal.500" />
       </Heading>
       <Heading
         fontSize={{ base: "18px", md: "20px" }}
         color="gray.500"
-        textAlign={"center"}
+        textAlign="center"
       >
         Don't have an account? Please sign up below
       </Heading>
-      <>
-        {formik.isSubmitting && (
-          <Spinner
-            thickness="4px"
-            speed="0.65s"
-            emptyColor="gray.200"
-            color="purple.500"
-            size="xl"
-          />
-        )}
+      {formik.isSubmitting && (
+        <Spinner
+          thickness="4px"
+          speed="0.65s"
+          emptyColor="gray.200"
+          color="purple.500"
+          size="xl"
+        />
+      )}
+      {error && (
         <Text as="p" color="red.500">
           {error}
         </Text>
-      </>
+      )}
       <FormControl
         isInvalid={formik.errors.username && formik.touched.username}
       >
@@ -163,7 +162,7 @@ const Signup = () => {
           bg="gray.200"
           textColor="black"
           _focus={{ bg: "gray.300", borderColor: "purple.500" }}
-          _placeholder={{ color: "gray.500" }} // Change placeholder text color here
+          _placeholder={{ color: "gray.500" }}
         />
         <FormErrorMessage>{formik.errors.username}</FormErrorMessage>
       </FormControl>
@@ -184,7 +183,7 @@ const Signup = () => {
             bg="gray.200"
             textColor="black"
             _focus={{ bg: "gray.300", borderColor: "purple.500" }}
-            _placeholder={{ color: "gray.500" }} // Change placeholder text color here
+            _placeholder={{ color: "gray.500" }}
           />
           <InputRightElement>
             <IconButton
@@ -192,7 +191,7 @@ const Signup = () => {
               icon={showPassword ? <ViewOffIcon /> : <ViewIcon />}
               onClick={() => setShowPassword(!showPassword)}
               variant="ghost"
-              color={"purple.500"}
+              color="purple.500"
             />
           </InputRightElement>
         </InputGroup>
@@ -217,7 +216,7 @@ const Signup = () => {
             bg="gray.200"
             textColor="black"
             _focus={{ bg: "gray.300", borderColor: "purple.500" }}
-            _placeholder={{ color: "gray.500" }} // Change placeholder text color here
+            _placeholder={{ color: "gray.500" }}
           />
           <InputRightElement>
             <IconButton
@@ -227,7 +226,7 @@ const Signup = () => {
               icon={showRetypedPassword ? <ViewOffIcon /> : <ViewIcon />}
               onClick={() => setShowRetypedPassword(!showRetypedPassword)}
               variant="ghost"
-              color={"purple.500"}
+              color="purple.500"
             />
           </InputRightElement>
         </InputGroup>
@@ -252,7 +251,7 @@ const Signup = () => {
       </ButtonGroup>
       <Text fontSize="sm" color="gray.500">
         Forgot your password?{" "}
-        <Text as="span" color="purple.500">
+        <Text as="span" color="purple.500" cursor="pointer">
           Reset your password!
         </Text>
       </Text>
