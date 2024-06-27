@@ -16,11 +16,11 @@ export const FriendContext = createContext();
 
 const Home = () => {
   const [friendsList, setFriendsList] = useState([
-    { username: "Adedolapo", connected: false, id: "1" },
-    { username: "Fatimah", connected: true, id: "2" },
-    { username: "Aminah", connected: false, id: "3" },
+    // { username: "Adedolapo", connected: false, id: "1" },
+    // { username: "Fatimah", connected: true, id: "2" },
+    // { username: "Aminah", connected: false, id: "3" },
   ]);
-  useSocketSetup();
+  useSocketSetup(setFriendsList);
   const sidebarColSpan = useBreakpointValue({ base: 12, md: 4 });
   const chatColSpan = useBreakpointValue({ base: 12, md: 8 });
   const bgColor = useColorModeValue("gray.50", "gray.900");

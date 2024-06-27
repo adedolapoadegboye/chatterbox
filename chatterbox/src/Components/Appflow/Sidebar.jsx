@@ -82,7 +82,7 @@ const Sidebar = () => {
         {friendsList.map((friend) => (
           <Box
             as={Tab}
-            key={friend.id}
+            key={`${friend.username}`}
             w="100%"
             p={3}
             borderRadius="md"

@@ -16,35 +16,42 @@ import {
   useColorModeValue,
 } from "@chakra-ui/react";
 import { Form, Formik } from "formik";
-import React, { useState } from "react";
+import React, { useContext, useState } from "react";
 import * as Yup from "yup";
 import socket from "../../Helpers/socket";
+import { FriendContext } from "./Home";
 
 const AddFriendModal = ({ isOpen, onClose }) => {
   const [error, setError] = useState(null);
   const initialValues = { newFriendName: "" };
+  const { setFriendsList } = useContext(FriendContext);
   const validationSchema = Yup.object({
     newFriendName: Yup.string()
       .required("Username required!")
       .min(6, "Username too short")
       .max(128, "Username too long"),
   });
-
   const handleSubmit = async (values, actions) => {
     setError(null); // Clear previous errors
     try {
-      socket.emit("add_friend", values.newFriendName, ({ done, addError }) => {
-        console.log(done, addError);
-        if (done) {
-          setError("Friend Request Sent!");
-        } else {
-          setError(addError);
+      socket.emit(
+        "add_friend",
+        values.newFriendName,
+        ({ done, addError, newFriend }) => {
+          console.log(done, addError);
+          if (done) {
+            setFriendsList((c) => [newFriend, ...c]);
+            setError("Friend Request Sent!");
+            onClose();
+          } else {
+            setError(addError);
+          }
         }
-      });
+      );
     } catch (err) {
       setError("An error occurred. Please try again.");
     } finally {
-      actions.setSubmitting(false); // Stop the loading animation
+      actions.setSubmitting(false); // Stop the loading animations
       actions.resetForm();
     }
   };

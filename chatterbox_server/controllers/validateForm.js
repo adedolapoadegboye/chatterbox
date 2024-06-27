@@ -19,15 +19,15 @@ const validateForm = (req, res, next) => {
   formSchema
     .validate(formData, { abortEarly: false }) // Ensure all errors are collected
     .then(() => {
-      console.log("Validation successful");
+      // console.log("Validation successful");
     })
     .catch((err) => {
-      console.log("Validation failed:", err);
+      // console.log("Validation failed:", err);
       const errors =
         err.inner && err.inner.length > 0
           ? err.inner.map((e) => e.message)
           : [err.message]; // Fallback to top-level error message if no inner errors
-      console.log("Formatted errors:", errors);
+      // console.log("Formatted errors:", errors);
       res.status(422).json({ errors }); // Send an error response with status 422
       next();
     });
