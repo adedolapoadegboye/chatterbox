@@ -2,7 +2,7 @@ import { useEffect, useContext } from "react";
 import socket from "./socket";
 import { accountContext } from "../Components/Context/Context";
 
-const useSocketSetup = (setFriendsList) => {
+const useSocketSetup = (setFriendsList, setMessages) => {
   const { setUser } = useContext(accountContext);
 
   useEffect(() => {
@@ -31,18 +31,33 @@ const useSocketSetup = (setFriendsList) => {
       setUser({ loggedIn: false });
     };
 
+    // Handle connection errors
+    const handleChatHistory = (messages) => {
+      setMessages(messages);
+    };
+
+    // Handle connection errors
+    const handleMessages = (message) => {
+      console.log(message.content);
+      setMessages((msgHistory) => [message, ...msgHistory]);
+    };
+
     // Set up socket event listeners
     socket.on("friends", handleFriendsList);
     socket.on("connected", handleConnectionStatus);
     socket.on("connect_error", handleConnectError);
+    socket.on("messages", handleChatHistory);
+    socket.on("dm", handleMessages);
 
     // Cleanup function to remove event listeners
     return () => {
       socket.off("friends", handleFriendsList);
       socket.off("connected", handleConnectionStatus);
       socket.off("connect_error", handleConnectError);
+      socket.off("messages", handleChatHistory);
+      socket.off("dm", handleMessages);
     };
-  }, [setUser, setFriendsList]);
+  }, [setUser, setFriendsList, setMessages]);
 };
 
 export default useSocketSetup;

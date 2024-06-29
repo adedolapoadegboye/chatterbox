@@ -12,6 +12,7 @@ const {
   authorizeUser,
   addFriend,
   onDisconnect,
+  dm,
 } = require("./controllers/socketController");
 const RedisStore = require("connect-redis").default; // Redis store for session storage
 
@@ -74,6 +75,11 @@ io.on("connect", (socket) => {
   // Handle "Add Friend" events
   socket.on("add_friend", (newFriendName, cb) => {
     addFriend(socket, newFriendName, cb);
+  });
+
+  // Handle "Message" events
+  socket.on("dm", (message) => {
+    dm(socket, message);
   });
 });
 

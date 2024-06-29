@@ -1,3 +1,4 @@
+import React, { useContext } from "react";
 import {
   VStack,
   HStack,
@@ -15,12 +16,11 @@ import {
   GridItem,
 } from "@chakra-ui/react";
 import { ChatIcon, SearchIcon } from "@chakra-ui/icons";
-import React, { useContext } from "react";
 import { FriendContext } from "./Home";
 import AddFriendModal from "./AddFriendModal";
 
 const Sidebar = () => {
-  const { friendsList } = useContext(FriendContext);
+  const { friendsList, setSelectedFriend } = useContext(FriendContext);
   const bg = useColorModeValue("gray.100", "gray.800");
   const color = useColorModeValue("black", "white");
   const hoverBgColor = useColorModeValue("gray.200", "gray.600");
@@ -29,7 +29,7 @@ const Sidebar = () => {
   return (
     <VStack
       py={{ base: "1rem", md: "1.4rem" }}
-      w="100%"
+      w={{ base: "100%", md: "350px" }}
       h="100vh"
       bg={bg}
       color={color}
@@ -44,28 +44,17 @@ const Sidebar = () => {
       >
         <Avatar name="User" src="https://bit.ly/broken-link" />
         <Button colorScheme="blue" variant="solid" onClick={onOpen}>
-          <Text>New</Text>
+          <Text>Add New Friend</Text>
           <ChatIcon ml={2} />
         </Button>
       </HStack>
       <Divider />
       <HStack px={{ base: "0.5rem", md: "1rem" }} w="100%">
-        <Box flex="1" overflow="hidden">
-          <Input
-            placeholder="Search or start new chat"
-            variant="filled"
-            bg={useColorModeValue("white", "gray.700")}
-            whiteSpace="nowrap"
-            overflow="hidden"
-            textOverflow="ellipsis"
-            width="100%"
-            _placeholder={{
-              whiteSpace: "nowrap",
-              overflow: "hidden",
-              textOverflow: "ellipsis",
-            }}
-          />
-        </Box>
+        <Input
+          placeholder="Search or start new chat"
+          variant="filled"
+          bg={useColorModeValue("white", "gray.700")}
+        />
         <Button colorScheme="blue" variant="ghost">
           <SearchIcon />
         </Button>
@@ -82,18 +71,14 @@ const Sidebar = () => {
         {friendsList.map((friend) => (
           <Box
             as={Tab}
-            key={`${friend.username}`}
+            key={friend.username}
             w="100%"
             p={3}
             borderRadius="md"
             _hover={{ bg: hoverBgColor }}
+            onClick={() => setSelectedFriend(friend)}
           >
-            <Grid
-              templateColumns="auto 1fr auto"
-              alignItems="center"
-              justify="space-between"
-              w={"100%"}
-            >
+            <Grid templateColumns="auto 1fr auto" alignItems="center">
               <GridItem>
                 <Avatar name={friend.username} src={friend.avatar} />
               </GridItem>

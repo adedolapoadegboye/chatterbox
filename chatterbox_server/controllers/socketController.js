@@ -36,6 +36,34 @@ module.exports.authorizeUser = async (socket, next) => {
 
       console.log(`Friend list for ${socket.user.username}`, parsedFriendsList);
       socket.emit("friends", parsedFriendsList);
+
+      const messageQuery = await redisClient.lrange(
+        `chat:${socket.user.userid}`,
+        0,
+        -1
+      );
+
+      const messages = messageQuery.map((message) => {
+        try {
+          const parsedString = message.split(".");
+          return {
+            to: parsedString[0],
+            from: parsedString[1],
+            content: parsedString[2],
+          };
+        } catch (error) {
+          console.log(error);
+        }
+      });
+
+      if (messages && messages.length > 0) {
+        try {
+          socket.emit("messages", messages);
+        } catch (error) {
+          console.log(error);
+        }
+      }
+
       next();
     } catch (error) {
       console.error("Authorization error:", error);
@@ -137,6 +165,24 @@ module.exports.onDisconnect = async (socket) => {
       friends.map((friend) => friend.userid)
     );
     socket.to(friendRooms).emit("connected", false, socket.user.username);
+  } catch (error) {
+    console.error("Disconnection error:", error);
+  }
+};
+
+// Function to handle direct messages
+module.exports.dm = async (socket, messages) => {
+  const parsedMessage = { ...messages, from: socket.user.userid };
+  // Stored as to.from.content
+  const messageString = [
+    parsedMessage.to,
+    parsedMessage.from,
+    parsedMessage.content,
+  ].join(".");
+  try {
+    await redisClient.lpush(`chat:${parsedMessage.to}`, messageString);
+    await redisClient.lpush(`chat:${parsedMessage.from}`, messageString);
+    socket.to(parsedMessage.to).emit("dm", parsedMessage);
   } catch (error) {
     console.error("Disconnection error:", error);
   }
