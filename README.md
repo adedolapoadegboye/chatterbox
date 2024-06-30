@@ -93,6 +93,26 @@ We're excited about the future of Chatterbox and have some great features planne
 - **Voice and Video Calls**: Connect with friends not just through text but also through voice and video. Talk face-to-face, no matter where you are. 📞🎥
 - **End-to-End Encryption**: Keep your conversations secure with top-notch encryption. Because privacy matters. 🔒
 - **Status Updates**: Share your mood, activity, or anything else with your friends through status updates. 📢
+- **Read Receipts**: Let users know when their messages have been read. Because no one likes being left on read. ✅👀
+- **Typing Indicators**: Show when someone is typing a message. It’s like seeing their thoughts form in real-time. ✍️
+- **Message Reactions**: Allow users to react to messages with emojis. Because sometimes a 👍 says it all. ❤️😂👍
+- **Scheduled Messages**: Send messages at a later time. Perfect for wishing happy birthdays at midnight. 🎂🎉
+- **Pinned Messages**: Pin important messages at the top of the chat for easy reference. 📌
+- **Advanced Search**: Search through messages, media, and links quickly. Finding that one meme has never been easier. 🔍
+- **Message Forwarding**: Easily forward messages to other chats or contacts. Sharing is caring. 📤
+- **File Sharing**: Send documents, PDFs, and other files seamlessly. 📁
+- **Contact Sharing**: Share contact details with a single tap. Networking made easy. 📇
+- **Location Sharing**: Share your real-time location with friends. Meeting up just got simpler. 📍
+- **Multi-device Sync**: Access your chats from multiple devices. Stay connected, anywhere and anytime. 📱💻
+- **Notification Customization**: Customize notification sounds and settings for different chats. Because not all notifications are created equal. 🔔
+- **Data Backup**: Backup chat history and media to the cloud. Never lose a message again. ☁️
+- **Public Channels**: Join and create public channels for broader community engagement. Think of it as a chat room for specific interests. 📢
+- **Bots and Integrations**: Add bots for tasks like reminders, weather updates, or integrating with other services. Automate the mundane. 🤖
+- **Polls and Surveys**: Create polls in group chats for quick feedback. Making decisions democratically. 📊
+- **Event Scheduling**: Schedule events and sync them with your calendar. Never miss a hangout. 📅
+- **Two-Factor Authentication (2FA)**: Add an extra layer of security for user accounts. Because better safe than sorry. 🔐
+- **Self-Destructing Messages**: Send messages that disappear after a set time. Perfect for those secret chats. ⏱️
+- **Content Moderation Tools**: Tools for group admins to moderate content and manage members. Keeping the chat safe and friendly. 🛡️
 
 ## 📜 License
 
