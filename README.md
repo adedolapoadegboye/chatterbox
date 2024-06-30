@@ -1,6 +1,6 @@
 # Chatterbox App
 
-Welcome to **Chatterbox**, the app that's like WhatsApp, but with a twist of awesome! 🎉
+Welcome to **Chatterbox**, a WhatsApp clone, but with a twist of awesome! 🎉
 
 ## 📜 Table of Contents
 
