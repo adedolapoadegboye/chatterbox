@@ -24,6 +24,6 @@
     "dev:server": "npm backend @chatterbox/server dev",
     "build:client": "npm frontend @chatterbox/client build",
     "test:client": "npm frontend @chatterbox/client test",
-    "test:server": "npm frontend @chatterbox/server test"
+    "test:server": "npm backend @chatterbox/server test"
   }
 }
