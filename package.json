@@ -20,6 +20,7 @@
     "supertest": "^7.0.0"
   },
   "scripts": {
+    "prebuild:client": "cd chatterbox && npm install",
     "dev:client": "cd chatterbox && npm start",
     "dev:server": "cd chatterbox_server && npm run dev",
     "build:client": "cd chatterbox && npm run build",
