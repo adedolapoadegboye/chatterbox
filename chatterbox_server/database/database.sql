@@ -1,6 +1,6 @@
-CREATE TABLE users(
+CREATE TABLE chatterbox_users(
     id SERIAL PRIMARY KEY,
-    username VARCHAR (128) NOT NULL UNIQUE
+    username VARCHAR(128) NOT NULL UNIQUE
     passhash VARCHAR NOT NULL
     userid VARCHAR NOT NULL UNIQUE
 )
