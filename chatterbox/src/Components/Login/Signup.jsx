@@ -58,17 +58,20 @@ const Signup = () => {
     onSubmit: async (values, actions) => {
       setError(null); // Clear previous errors
       try {
-        const response = await fetch("http://localhost:4000/auth/signup", {
-          method: "POST",
-          credentials: "include", // Important to include cookies
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            username: values.username,
-            password: values.password,
-          }),
-        });
+        const response = await fetch(
+          `${process.env.REACT_APP_SERVER_URL}/auth/signup`,
+          {
+            method: "POST",
+            credentials: "include", // Important to include cookies
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              username: values.username,
+              password: values.password,
+            }),
+          }
+        );
 
         const data = await response.json();
 

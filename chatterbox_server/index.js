@@ -25,7 +25,7 @@ const server = require("http").createServer(app);
 // Create a new Socket.io server and configure CORS settings
 const io = new Server(server, {
   cors: {
-    origin: process.env.FRONTEND_URL || "http://localhost:3000", // Allow requests from this origin
+    origin: process.env.CLIENT_URL || "http://localhost:3000", // Allow requests from this origin
     credentials: true, // Allow cookies to be sent with the requests
   },
 });
@@ -36,7 +36,7 @@ app.use(helmet());
 // Use CORS to accept requests/traffic from the frontend only
 app.use(
   cors({
-    origin: process.env.FRONTEND_URL || "http://localhost:3000",
+    origin: process.env.CLIENT_URL || "http://localhost:3000",
     credentials: true,
   })
 );
@@ -55,6 +55,8 @@ app.use(sessionMW);
 
 // Use middleware to pass auth requests to appropriate handler
 app.use("/auth", authRouter);
+
+app.set("trust proxy", 1);
 
 // Socket.io middleware to use the same session management
 io.use(wrap(sessionMW));

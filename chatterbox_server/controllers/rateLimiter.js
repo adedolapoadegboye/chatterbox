@@ -2,7 +2,7 @@
 const redisClient = require("../redis/redis");
 
 module.exports.rateLimiter = async (req, res, next) => {
-  const ip = req.ip; // Use req.ip to get the client's IP address
+  const ip = req.headers["x-forwarded-for"] || req.connection.remoteAddress; // Use req.ip to get the client's IP address if this does not work
   // console.log(`Client IP: ${ip}`);
 
   try {

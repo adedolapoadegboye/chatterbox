@@ -54,14 +54,17 @@ const Login = () => {
     onSubmit: async (values, actions) => {
       setError(null); // Clear previous errors
       try {
-        const response = await fetch("http://localhost:4000/auth/login", {
-          method: "POST",
-          credentials: "include", // Important to include cookies
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify(values),
-        });
+        const response = await fetch(
+          `${process.env.REACT_APP_SERVER_URL}/auth/login`,
+          {
+            method: "POST",
+            credentials: "include", // Important to include cookies
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify(values),
+          }
+        );
 
         const data = await response.json();
 

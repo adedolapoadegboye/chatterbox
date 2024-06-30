@@ -25,4 +25,9 @@ const wrap = (expressMW) => (socket, next) => {
   expressMW(socket.request, {}, next);
 };
 
+const corsConfig = {
+  origin: process.env.CLIENT_URL,
+  credentials: true,
+};
+
 module.exports = { sessionMW, wrap };

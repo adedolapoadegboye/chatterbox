@@ -11,13 +11,16 @@ const UserContext = ({ children }) => {
   useEffect(() => {
     const checkLoginStatus = async () => {
       try {
-        const res = await fetch("http://localhost:4000/auth/login", {
-          method: "GET",
-          credentials: "include", // Important to include cookies
-          headers: {
-            "Content-Type": "application/json",
-          },
-        });
+        const res = await fetch(
+          `${process.env.REACT_APP_SERVER_URL}/auth/login`,
+          {
+            method: "GET",
+            credentials: "include", // Important to include cookies
+            headers: {
+              "Content-Type": "application/json",
+            },
+          }
+        );
 
         if (!res || !res.ok || res.status >= 400) {
           setUser({ loggedIn: false });
