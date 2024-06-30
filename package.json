@@ -1,4 +1,13 @@
 {
+  "main": "index.js",
+  "license": "MIT",
+  "private": "true",
+  "frontend": [
+    "chatterbox/*"
+  ],
+  "backend": [
+    "chatterbox_server/*"
+  ],
   "dependencies": {
     "bcrypt": "^5.1.1",
     "dotenv": "^16.4.5",
@@ -9,5 +18,12 @@
   "devDependencies": {
     "jest": "^29.7.0",
     "supertest": "^7.0.0"
+  },
+  "scripts": {
+    "dev:client": "npm frontend @chatterbox/client start",
+    "dev:server": "npm backend @chatterbox/server dev",
+    "build:client": "npm frontend @chatterbox/client build",
+    "test:client": "npm frontend @chatterbox/client test",
+    "test:server": "npm frontend @chatterbox/server test"
   }
 }

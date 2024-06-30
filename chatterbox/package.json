@@ -1,4 +1,8 @@
 {
+  "name": "@chatterbox/client",
+  "description": "client for chatterbox app",
+  "version": "1.0.0",
+  "private": true,
   "dependencies": {
     "@chakra-ui/icons": "^2.1.1",
     "@chakra-ui/react": "^2.8.2",
