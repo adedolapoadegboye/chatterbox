@@ -17,7 +17,7 @@ const createJWT = (user, res) => {
       userid: user.userid,
     },
     process.env.JWT_SECRET,
-    { expiresIn: "1min" },
+    { expiresIn: "1hr" },
     (err, token) => {
       if (err) {
         return res
