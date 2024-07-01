@@ -6,8 +6,10 @@ const useSocketSetup = (setFriendsList, setMessages) => {
   const { setUser } = useContext(accountContext);
 
   useEffect(() => {
-    // Connect to the socket server
-    socket.connect();
+    // Only connect if the socket is not already connected
+    if (!socket.connected) {
+      socket.connect();
+    }
 
     // Handle friends list received from the server
     const handleFriendsList = (friendsList) => {
@@ -26,19 +28,20 @@ const useSocketSetup = (setFriendsList, setMessages) => {
       });
     };
 
-    // Handle connection errors
-    const handleConnectError = () => {
+    // Handle connection errors with detailed logging
+    const handleConnectError = (error) => {
+      console.error("Socket connection error:", error);
       setUser({ loggedIn: false });
     };
 
-    // Handle connection errors
+    // Handle chat history received from the server
     const handleChatHistory = (messages) => {
       setMessages(messages);
     };
 
-    // Handle connection errors
+    // Handle incoming messages
     const handleMessages = (message) => {
-      console.log(message.content);
+      console.log("Received message:", message.content);
       setMessages((msgHistory) => [message, ...msgHistory]);
     };
 
