@@ -15,7 +15,7 @@ import {
   Icon,
 } from "@chakra-ui/react";
 import { ArrowBackIcon, StarIcon, ChatIcon } from "@chakra-ui/icons";
-import { FriendContext, MessagesContext, SocketContext } from "./Home";
+import { FriendContext, MessagesContext } from "./Home";
 import ChatBox from "./ChatBox";
 
 // Create animation keyframes

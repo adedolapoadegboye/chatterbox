@@ -24,15 +24,17 @@ const Home = () => {
   const [friendIndex, setFriendIndex] = useState(0);
   const [messages, setMessages] = useState([]);
   const { user } = useContext(accountContext);
-  const [socket, setSocket] = useState(() => {
-    socketCon(user);
-  });
+  const [socket, setSocket] = useState(null);
 
   useEffect(() => {
-    setSocket(user);
+    if (user) {
+      const newSocket = socketCon(user);
+      setSocket(newSocket);
+    }
   }, [user]);
 
-  useSocketSetup(setFriendsList, setMessages);
+  useSocketSetup(setFriendsList, setMessages, socket);
+
   const isMdOrLarger = useBreakpointValue({ base: false, md: true });
   const sidebarColSpan = useBreakpointValue({ base: 12, md: 4 });
   const chatColSpan = useBreakpointValue({ base: 12, md: 8 });
