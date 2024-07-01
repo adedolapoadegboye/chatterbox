@@ -3,13 +3,14 @@ import { HStack, Input, IconButton, useColorModeValue } from "@chakra-ui/react";
 import { ArrowForwardIcon } from "@chakra-ui/icons";
 import { Field, Form, Formik } from "formik";
 import * as Yup from "yup";
-import socket from "../../Helpers/socket";
-import { MessagesContext } from "./Home";
+// import socket from "../../Helpers/socket";
+import { MessagesContext, SocketContext } from "./Home";
 
 const ChatBox = ({ userid }) => {
   const inputBg = useColorModeValue("gray.200", "gray.700");
   const inputFocusBg = useColorModeValue("gray.300", "gray.600");
   const { setMessages } = useContext(MessagesContext);
+  const { socket } = useContext(SocketContext);
 
   return (
     <Formik

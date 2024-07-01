@@ -18,8 +18,8 @@ import {
 import { Form, Formik } from "formik";
 import React, { useContext, useState } from "react";
 import * as Yup from "yup";
-import socket from "../../Helpers/socket";
-import { FriendContext } from "./Home";
+// import socket from "../../Helpers/socket";
+import { FriendContext, SocketContext } from "./Home";
 
 // Validation schema using Yup
 const validationSchema = Yup.object({
@@ -32,6 +32,7 @@ const validationSchema = Yup.object({
 const AddFriendModal = ({ isOpen, onClose }) => {
   const [error, setError] = useState(null);
   const { setFriendsList } = useContext(FriendContext);
+  const { socket } = useContext(SocketContext);
 
   const initialValues = { newFriendName: "" };
 
