@@ -1,15 +1,63 @@
 const redisClient = require("../redis/redis");
+const jwt = require("jsonwebtoken");
 require("dotenv").config();
+
+// Utility function to parse the friends list
+const parseFriendsList = async (friendsList) => {
+  const newFriendsList = [];
+  for (let friend of friendsList) {
+    const [username, userid] = friend.split(".");
+    const connected = await redisClient.hget(`userid:${username}`, "connected");
+    newFriendsList.push({
+      username,
+      userid,
+      connected: connected === "true", // Ensure the connection status is a boolean
+    });
+  }
+  return newFriendsList;
+};
+
+// Utility function to emit messages
+const emitMessages = async (socket, userId) => {
+  const messageQuery = await redisClient.lrange(`chat:${userId}`, 0, -1);
+  const messages = messageQuery.map((message) => {
+    try {
+      const parsedString = message.split(".");
+      return {
+        to: parsedString[0],
+        from: parsedString[1],
+        content: parsedString[2],
+      };
+    } catch (error) {
+      console.log(error);
+    }
+  });
+
+  if (messages && messages.length > 0) {
+    try {
+      socket.emit("messages", messages);
+    } catch (error) {
+      console.log(error);
+    }
+  }
+};
 
 // Middleware to authorize the user
 module.exports.authorizeUser = async (socket, next) => {
-  const session = socket.request.session;
-  if (session && session.user) {
-    socket.user = session.user; // Set the user object
-    socket.join(socket.user.userid); // Join the user to their own room
+  const token = socket.handshake.auth.token;
+  if (!token) {
+    return next(new Error("No token provided"));
+  }
+
+  jwt.verify(token, process.env.JWT_SECRET, async (err, decodedToken) => {
+    if (err) {
+      return next(new Error("Invalid token, please log in again"));
+    }
+
+    socket.user = { ...decodedToken };
+    socket.join(socket.user.userid);
 
     try {
-      // Set the Redis key without extra spaces
       await redisClient.hset(
         `userid:${socket.user.username}`,
         "userid",
@@ -18,51 +66,21 @@ module.exports.authorizeUser = async (socket, next) => {
         true
       );
 
-      // Get the friends list from Redis
       const friendsList = await redisClient.lrange(
         `friends:${socket.user.username}`,
         0,
         -1
       );
 
-      // Parse the friends list to include connection status
       const parsedFriendsList = await parseFriendsList(friendsList);
       const friendRooms = parsedFriendsList.map((friend) => friend.userid);
 
-      // Notify friends about the user's connection status
       if (friendRooms.length > 0) {
         socket.to(friendRooms).emit("connected", true, socket.user.username);
       }
 
-      console.log(`Friend list for ${socket.user.username}`, parsedFriendsList);
       socket.emit("friends", parsedFriendsList);
-
-      const messageQuery = await redisClient.lrange(
-        `chat:${socket.user.userid}`,
-        0,
-        -1
-      );
-
-      const messages = messageQuery.map((message) => {
-        try {
-          const parsedString = message.split(".");
-          return {
-            to: parsedString[0],
-            from: parsedString[1],
-            content: parsedString[2],
-          };
-        } catch (error) {
-          console.log(error);
-        }
-      });
-
-      if (messages && messages.length > 0) {
-        try {
-          socket.emit("messages", messages);
-        } catch (error) {
-          console.log(error);
-        }
-      }
+      await emitMessages(socket, socket.user.userid);
 
       next();
     } catch (error) {
@@ -73,57 +91,40 @@ module.exports.authorizeUser = async (socket, next) => {
         )
       );
     }
-  } else {
-    console.log("User not authorized:", session); // Debugging line
-    next(
-      new Error(
-        "Unauthorized: Looks like you're not logged in. Please log in and try again!"
-      )
-    );
-  }
+  });
 };
 
 // Function to add a friend
 module.exports.addFriend = async (socket, add_friend, cb) => {
   try {
-    // Get the friend's details from Redis
     const friend = await redisClient.hgetall(`userid:${add_friend}`);
     if (!friend || !friend.userid) {
-      cb({
+      return cb({
         done: false,
         addError:
           "Whoops! This user doesn't exist. Please double-check the username.",
       });
-      return;
     }
 
-    // Prevent adding oneself as a friend
     if (friend.userid === socket.user.userid) {
-      cb({
+      return cb({
         done: false,
         addError: "Nice try, but you can't be your own best friend!",
       });
-      return;
     }
 
-    // Check if the friend is already in the user's friends list
     const currentFriendsList = await redisClient.lrange(
       `friends:${socket.user.username}`,
       0,
       -1
     );
-    if (
-      currentFriendsList &&
-      currentFriendsList.includes(`${add_friend}.${friend.userid}`)
-    ) {
-      cb({
+    if (currentFriendsList.includes(`${add_friend}.${friend.userid}`)) {
+      return cb({
         done: false,
         addError: "Hold up! This friend is already in your list.",
       });
-      return;
     }
 
-    // Add the friend to the user's friends list in Redis
     await redisClient.lpush(
       `friends:${socket.user.username}`,
       `${add_friend}.${friend.userid}`
@@ -173,32 +174,17 @@ module.exports.onDisconnect = async (socket) => {
 // Function to handle direct messages
 module.exports.dm = async (socket, messages) => {
   const parsedMessage = { ...messages, from: socket.user.userid };
-  // Stored as to.from.content
   const messageString = [
     parsedMessage.to,
     parsedMessage.from,
     parsedMessage.content,
   ].join(".");
+
   try {
     await redisClient.lpush(`chat:${parsedMessage.to}`, messageString);
     await redisClient.lpush(`chat:${parsedMessage.from}`, messageString);
     socket.to(parsedMessage.to).emit("dm", parsedMessage);
   } catch (error) {
-    console.error("Disconnection error:", error);
+    console.error("Message error:", error);
   }
-};
-
-// Helper function to parse the friends list
-const parseFriendsList = async (friendsList) => {
-  const newFriendsList = [];
-  for (let friend of friendsList) {
-    const [username, userid] = friend.split(".");
-    const connected = await redisClient.hget(`userid:${username}`, "connected");
-    newFriendsList.push({
-      username,
-      userid,
-      connected: connected === "true", // Ensure the connection status is a boolean
-    });
-  }
-  return newFriendsList;
 };
