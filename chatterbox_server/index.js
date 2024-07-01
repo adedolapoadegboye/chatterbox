@@ -7,7 +7,7 @@ const authRouter = require("./routers/authRouter"); // Import auth handler for l
 const session = require("express-session"); // Session middleware for handling user sessions
 require("dotenv").config(); // Load environment variables from .env file
 const redisClient = require("./redis/redis"); // Redis client for session storage
-const { sessionMW, wrap } = require("./controllers/serverController"); // Session middleware and wrapper for Socket.io
+// const { sessionMW, wrap } = require("./controllers/serverController"); // Session middleware and wrapper for Socket.io
 const {
   authorizeUser,
   addFriend,
@@ -51,7 +51,7 @@ if (process.env.NODE_ENV === "development") {
 }
 
 // Use middleware for session persistence
-app.use(sessionMW);
+// app.use(sessionMW);
 
 // Use middleware to pass auth requests to appropriate handler
 app.use("/auth", authRouter);
@@ -59,7 +59,7 @@ app.use("/auth", authRouter);
 app.set("trust proxy", 1);
 
 // Socket.io middleware to use the same session management
-io.use(wrap(sessionMW));
+// io.use(wrap(sessionMW));
 
 // Custom middleware to authorize user
 io.use(authorizeUser);
