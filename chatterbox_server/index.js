@@ -67,11 +67,11 @@ io.use(authorizeUser);
 // Handle WebSocket connections
 io.on("connect", (socket) => {
   // Log the username and user id of the connected user
-  console.log(`User connected: ${socket.request.session.user.username} `);
+  // console.log(`User connected `);
   socket.on("disconnect", () => {
     onDisconnect(socket);
     // Handle user disconnection
-    console.log(`User disconnected: ${socket.request.session.user.username}`);
+    // console.log(`User disconnected: ${socket.request.session.user.username}`);
   });
 
   // Handle "Add Friend" events

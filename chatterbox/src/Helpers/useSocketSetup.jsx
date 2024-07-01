@@ -1,12 +1,15 @@
 import { useEffect, useContext } from "react";
-import socket from "./socket";
 import { accountContext } from "../Components/Context/Context";
 
-const useSocketSetup = (setFriendsList, setMessages) => {
+const useSocketSetup = (setFriendsList, setMessages, socket) => {
   const { setUser } = useContext(accountContext);
 
   useEffect(() => {
-    // Only connect if the socket is not already connected
+    if (!socket) {
+      console.error("Socket is not available");
+      return;
+    }
+
     if (!socket.connected) {
       socket.connect();
     }
@@ -60,7 +63,7 @@ const useSocketSetup = (setFriendsList, setMessages) => {
       socket.off("messages", handleChatHistory);
       socket.off("dm", handleMessages);
     };
-  }, [setUser, setFriendsList, setMessages]);
+  }, [setUser, setFriendsList, setMessages, socket]);
 };
 
 export default useSocketSetup;
