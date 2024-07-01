@@ -28,7 +28,6 @@ import { useFormik } from "formik";
 import * as Yup from "yup";
 import { accountContext } from "../Context/Context";
 
-// Validation schema using Yup
 const validationSchema = Yup.object({
   username: Yup.string()
     .required("Username required!")
@@ -47,7 +46,6 @@ const Login = () => {
   const { setUser } = useContext(accountContext);
   const [showPassword, setShowPassword] = useState(false);
 
-  // Formik for form handling
   const formik = useFormik({
     initialValues: { username: "", password: "" },
     validationSchema,
@@ -58,7 +56,7 @@ const Login = () => {
           `${process.env.REACT_APP_SERVER_URL}/auth/login`,
           {
             method: "POST",
-            credentials: "include", // Important to include cookies
+            credentials: "include",
             headers: {
               "Content-Type": "application/json",
             },
@@ -77,7 +75,7 @@ const Login = () => {
         } else {
           toast({
             title: "Log in successful!",
-            description: "Welcome to Chatterboxx!",
+            description: "Welcome to Chatterbox!",
             status: "success",
             duration: 5000,
             isClosable: true,
@@ -89,7 +87,7 @@ const Login = () => {
       } catch (err) {
         setError("An error occurred. Please try again.");
       } finally {
-        actions.setSubmitting(false); // Stop the loading animation
+        actions.setSubmitting(false);
         actions.resetForm();
       }
     },

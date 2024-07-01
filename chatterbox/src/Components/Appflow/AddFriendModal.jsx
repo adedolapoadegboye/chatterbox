@@ -1,3 +1,4 @@
+import React, { useContext, useState } from "react";
 import {
   Modal,
   ModalOverlay,
@@ -15,10 +16,8 @@ import {
   Spinner,
   useColorModeValue,
 } from "@chakra-ui/react";
-import { Form, Formik } from "formik";
-import React, { useContext, useState } from "react";
+import { Formik, Form, Field } from "formik";
 import * as Yup from "yup";
-// import socket from "../../Helpers/socket";
 import { FriendContext, SocketContext } from "./Home";
 
 // Validation schema using Yup
@@ -37,27 +36,22 @@ const AddFriendModal = ({ isOpen, onClose }) => {
   const initialValues = { newFriendName: "" };
 
   // Submit handler
-  const handleSubmit = async (values, actions) => {
+  const handleSubmit = (values, actions) => {
     setError(null); // Clear previous errors
-    try {
-      socket.emit(
-        "add_friend",
-        values.newFriendName,
-        ({ done, addError, newFriend }) => {
-          if (done) {
-            setFriendsList((c) => [newFriend, ...c]);
-            onClose(); // Close the modal on success
-          } else {
-            setError(addError); // Set error message
-          }
+    socket.emit(
+      "add_friend",
+      values.newFriendName,
+      ({ done, addError, newFriend }) => {
+        if (done) {
+          setFriendsList((prevFriends) => [newFriend, ...prevFriends]);
+          onClose(); // Close the modal on success
+        } else {
+          setError(addError); // Set error message
         }
-      );
-    } catch (err) {
-      setError("An error occurred. Please try again.");
-    } finally {
-      actions.setSubmitting(false); // Stop the loading animations
-      actions.resetForm();
-    }
+        actions.setSubmitting(false); // Stop the loading animations
+        actions.resetForm();
+      }
+    );
   };
 
   // Color mode values
@@ -79,10 +73,10 @@ const AddFriendModal = ({ isOpen, onClose }) => {
           validationSchema={validationSchema}
           onSubmit={handleSubmit}
         >
-          {(formik) => (
+          {({ isSubmitting, errors, touched }) => (
             <Form>
               <ModalBody>
-                {formik.isSubmitting && (
+                {isSubmitting && (
                   <Spinner
                     thickness="4px"
                     speed="0.65s"
@@ -94,32 +88,28 @@ const AddFriendModal = ({ isOpen, onClose }) => {
                     my="4"
                   />
                 )}
-                <Text as="p" color="blue.200" textAlign="center">
-                  {error}
-                </Text>
+                {error && (
+                  <Text as="p" color="red.500" textAlign="center" mt={4}>
+                    {error}
+                  </Text>
+                )}
                 <FormControl
-                  isInvalid={
-                    formik.errors.newFriendName && formik.touched.newFriendName
-                  }
+                  isInvalid={errors.newFriendName && touched.newFriendName}
                   mt={4}
                 >
                   <FormLabel>Enter Friend's Username</FormLabel>
-                  <Input
+                  <Field
+                    as={Input}
                     name="newFriendName"
                     placeholder="Enter Friend's Username"
                     autoComplete="off"
                     fontSize="sm"
-                    onChange={formik.handleChange}
-                    onBlur={formik.handleBlur}
-                    value={formik.values.newFriendName}
                     bg={inputBg}
                     textColor={textColor}
                     _focus={{ bg: inputFocusBg, borderColor: "purple.500" }}
                     _placeholder={{ color: "gray.500" }}
                   />
-                  <FormErrorMessage>
-                    {formik.errors.newFriendName}
-                  </FormErrorMessage>
+                  <FormErrorMessage>{errors.newFriendName}</FormErrorMessage>
                 </FormControl>
               </ModalBody>
               <ModalFooter>
@@ -137,7 +127,7 @@ const AddFriendModal = ({ isOpen, onClose }) => {
                   colorScheme="blue"
                   variant="ghost"
                   type="submit"
-                  isLoading={formik.isSubmitting}
+                  isLoading={isSubmitting}
                 >
                   Add Friend
                 </Button>
