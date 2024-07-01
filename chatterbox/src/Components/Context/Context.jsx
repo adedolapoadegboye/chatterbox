@@ -5,7 +5,10 @@ import { useNavigate } from "react-router-dom";
 export const accountContext = createContext();
 
 const UserContext = ({ children }) => {
-  const [user, setUser] = useState({ loggedIn: null });
+  const [user, setUser] = useState({
+    loggedIn: null,
+    token: localStorage.getItem("token"),
+  });
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -18,6 +21,7 @@ const UserContext = ({ children }) => {
             credentials: "include", // Important to include cookies
             headers: {
               "Content-Type": "application/json",
+              authorization: `Bearer ${user.token}`,
             },
           }
         );

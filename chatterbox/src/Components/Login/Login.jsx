@@ -83,6 +83,7 @@ const Login = () => {
             isClosable: true,
           });
           setUser({ ...data });
+          localStorage.setItem("token", data.token);
           navigate("/home");
         }
       } catch (err) {
