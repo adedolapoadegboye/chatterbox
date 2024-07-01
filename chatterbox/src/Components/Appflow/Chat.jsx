@@ -1,3 +1,4 @@
+// Chat.jsx
 import React, { useContext, useLayoutEffect, useRef } from "react";
 import {
   Box,
@@ -30,8 +31,8 @@ const bounce = keyframes`
 `;
 
 const Chat = ({ userid }) => {
-  const { selectedFriend, setSelectedFriend } = useContext(FriendContext);
-  const { friendsList } = useContext(FriendContext);
+  const { selectedFriend, setSelectedFriend, friendsList } =
+    useContext(FriendContext);
   const { messages } = useContext(MessagesContext);
   const chatContainerRef = useRef(null);
 
@@ -123,7 +124,6 @@ const Chat = ({ userid }) => {
           </Heading>
         </HStack>
         {isMdOrLarger && <Box w="48px" />}{" "}
-        {/* Placeholder to balance the layout */}
       </HStack>
       <VStack
         ref={chatContainerRef}
@@ -170,7 +170,6 @@ const Chat = ({ userid }) => {
         </TabPanels>
         <Box
           w={{ base: "100%", md: "calc(100% / (12/8))" }}
-          // p={{ base: 2, md: 4 }}
           bg={bgColor}
           position="fixed"
           bottom={0}
